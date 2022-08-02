@@ -1,5 +1,6 @@
 """
  Using the CIFAR-10 dataset on a custom CNN
+ Explanation and equations here https://alexcpn.medium.com/cnn-from-scratch-b97057d8cef4
 """
 import torch
 import torch.nn as nn
@@ -13,7 +14,8 @@ log.basicConfig(format='%(asctime)s %(message)s', level=log.INFO)
 
 
 # My CNN Model
-# Loss is not coming down - something is wrong with the model
+# https://alexcpn.medium.com/cnn-from-scratch-b97057d8cef4
+# To get the filter use this https://docs.google.com/spreadsheets/d/1tsi4Yl2TwrPg5Ter8P_G30tFLSGQ1i29jqFagxNFa4A/edit?usp=sharing
 class MyCNN(nn.Module):
     def __init__(self):
         super(MyCNN, self).__init__()
@@ -21,22 +23,23 @@ class MyCNN(nn.Module):
         self.cnn_stack = nn.Sequential(
             nn.Conv2d(in_channels=3,out_channels=6,kernel_size=5,stride=1), #[6,28,28]
             nn.ReLU(),
-            nn.Conv2d(in_channels=6,out_channels=1,kernel_size=5,stride=1), #[1.24.24]
+            nn.Conv2d(in_channels=6,out_channels=6,kernel_size=15,stride=1), #[6.14.14]
             nn.ReLU(),
-            nn.Conv2d(in_channels=1,out_channels=10,kernel_size=5,stride=1), #[10,20,20] [C, H,W] #changed channels to 10
+            nn.Conv2d(in_channels=6,out_channels=16,kernel_size=5,stride=1), #[16,10,10] [C, H,W] #changed channels to 10
+            # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
+            nn.ReLU(),
+            nn.Conv2d(in_channels=16,out_channels=16,kernel_size=6,stride=1), #[16,5,5] [C, H,W] 
             # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
             nn.ReLU()
         )
         self.linear_stack = nn.Sequential(
-            nn.Linear(4000,1000),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
-            nn.ReLU(),
-            nn.Linear(1000,100),
+            nn.Linear(400,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
             nn.ReLU(),
             nn.Linear(100,10),
             nn.ReLU()
         )
         self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
-        self.logSoftmax = nn.LogSoftmax(dim=1)
+        self.logSoftmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         logits = self.cnn_stack(x)
