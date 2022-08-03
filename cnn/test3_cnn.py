@@ -6,8 +6,6 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-import numpy as np
-import sys
 import logging as log
 
 log.basicConfig(format='%(asctime)s %(message)s', level=log.INFO)
@@ -39,7 +37,7 @@ class MyCNN(nn.Module):
             nn.ReLU()
         )
         self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
-        self.logSoftmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         logits = self.cnn_stack(x)
@@ -48,7 +46,7 @@ class MyCNN(nn.Module):
         log.debug("Shape of logits after flatten: %s", logits.shape) # [N, C*H*W]
         logits = self.linear_stack(logits)
         log.debug("Shape of logits after linear stack: %s", logits.shape) # [N,10]
-        logits = self.logSoftmax(logits)
+        logits = self.softmax(logits)
         log.debug("Shape of logits after logSoftmax: %s", logits.shape) #batchsize, 10
         return logits
 
@@ -181,6 +179,14 @@ Epoch [19/20], Step [400/782], Loss: 0.0254
 Epoch [20/20], Step [400/782], Loss: 0.0167
 Accuracy of the network on the 10000 test images: 50.74 % --> Bad
 
+With
+learning_rate = 0.0001
+num_epochs = 40 
 
+Epoch [37/40], Step [400/782], Loss: 2.0008
+Epoch [38/40], Step [400/782], Loss: 2.1031
+Epoch [39/40], Step [400/782], Loss: 2.0204
+Epoch [40/40], Step [400/782], Loss: 2.0130
+Accuracy of the network on the 10000 test images: 39.99 %
 
 """
