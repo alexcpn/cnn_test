@@ -7,48 +7,11 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import logging as log
+import alexnet
+import mycnn
 
 log.basicConfig(format='%(asctime)s %(message)s', level=log.INFO)
 
-
-# My CNN Model
-# https://alexcpn.medium.com/cnn-from-scratch-b97057d8cef4
-# To get the filter use this https://docs.google.com/spreadsheets/d/1tsi4Yl2TwrPg5Ter8P_G30tFLSGQ1i29jqFagxNFa4A/edit?usp=sharing
-class MyCNN(nn.Module):
-    def __init__(self):
-        super(MyCNN, self).__init__()
-        # Input 32*32 * 3
-        self.cnn_stack = nn.Sequential(
-            nn.Conv2d(in_channels=3,out_channels=6,kernel_size=5,stride=1), #[6,28,28]
-            nn.ReLU(),
-            nn.Conv2d(in_channels=6,out_channels=6,kernel_size=15,stride=1), #[6.14.14]
-            nn.ReLU(),
-            nn.Conv2d(in_channels=6,out_channels=16,kernel_size=5,stride=1), #[16,10,10] [C, H,W] #changed channels to 10
-            # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
-            nn.ReLU(),
-            nn.Conv2d(in_channels=16,out_channels=16,kernel_size=6,stride=1), #[16,5,5] [C, H,W] 
-            # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
-            nn.ReLU()
-        )
-        self.linear_stack = nn.Sequential(
-            nn.Linear(400,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
-            nn.ReLU(),
-            nn.Linear(100,10),
-            nn.ReLU()
-        )
-        self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
-        self.softmax = nn.Softmax(dim=1)
-
-    def forward(self, x):
-        logits = self.cnn_stack(x)
-        log.debug("Shape of logits: %s", logits.shape)
-        logits = self.flatten(logits)
-        log.debug("Shape of logits after flatten: %s", logits.shape) # [N, C*H*W]
-        logits = self.linear_stack(logits)
-        log.debug("Shape of logits after linear stack: %s", logits.shape) # [N,10]
-        logits = self.softmax(logits)
-        log.debug("Shape of logits after logSoftmax: %s", logits.shape) #batchsize, 10
-        return logits
 
 #-------------------------------------------------------------------------------------------------------
 # Code
@@ -66,12 +29,25 @@ if device.type == 'cuda':
     deviceid = torch.cuda.current_device()
     log.info(f"Gpu device {torch.cuda.get_device_name(deviceid)}")
 
-# Load the data
 
+#-------------------------------------------------------------------------------------------------------
+# Load the model
+#-------------------------------------------------------------------------------------------------------
+
+# Alexnet model works well for CIFAR-10 when input is scaled to 227x227 (from 32x32)
+#model = alexnet.AlexNet().to(device)
+#resize = transforms.Resize((227, 227))
+
+model = mycnn.MyCNN().to(device)
+resize = transforms.Resize((32, 32))
+
+#-------------------------------------------------------------------------------------------------------
+# Load the data
+#-------------------------------------------------------------------------------------------------------
 # Use transforms.compose method to reformat images for modeling,
 # and save to variable all_transforms for later use
 # mean calculated like https://stackoverflow.com/a/69750247/429476
-all_transforms = transforms.Compose([transforms.Resize((32,32)),
+all_transforms = transforms.Compose([resize,
                                      transforms.ToTensor(),
                                      transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                                           std=[0.2470, 0.2435, 0.2616])
@@ -101,8 +77,6 @@ test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                            shuffle = True)
 
 
-
-model = MyCNN().to(device)
 
 # initialize our optimizer and loss function
 opt = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -189,4 +163,26 @@ Epoch [39/40], Step [400/782], Loss: 2.0204
 Epoch [40/40], Step [400/782], Loss: 2.0130
 Accuracy of the network on the 10000 test images: 39.99 %
 
+With BacthNorm and AveragePooling
+
+Epoch [15/20], Step [400/782], Loss: 1.9575
+Epoch [16/20], Step [400/782], Loss: 1.9851
+Epoch [17/20], Step [400/782], Loss: 2.0514
+Epoch [18/20], Step [400/782], Loss: 1.9648
+Epoch [19/20], Step [400/782], Loss: 1.9385
+Epoch [20/20], Step [400/782], Loss: 2.0371
+Accuracy of the network on the 10000 test images: 46.93 %
+
+"""
+
+## AlexNet - Works !!
+
+"""
+Epoch [15/20], Step [400/782], Loss: 0.1792
+Epoch [16/20], Step [400/782], Loss: 0.1993
+Epoch [17/20], Step [400/782], Loss: 0.1874
+Epoch [18/20], Step [400/782], Loss: 0.2119
+Epoch [19/20], Step [400/782], Loss: 0.1802
+Epoch [20/20], Step [400/782], Loss: 0.2543
+Accuracy of the network on the 10000 test images: 83.2 %
 """
