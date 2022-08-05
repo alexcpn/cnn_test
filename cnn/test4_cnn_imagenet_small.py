@@ -53,7 +53,7 @@ normalize_transform = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
 train_transforms = transforms.Compose([
-    transforms.Resize((426, 320)),
+    transforms.Resize((227, 227)),
     transforms.ToTensor(),
     normalize_transform
 ])
@@ -61,7 +61,7 @@ train_transforms = transforms.Compose([
 val_dir = os.path.join(data_dir, 'val')
 
 val_transforms = transforms.Compose([
-        transforms.Resize((426, 320)),
+        transforms.Resize((227, 227)),
         transforms.ToTensor(),
         normalize_transform
     ])
@@ -171,24 +171,19 @@ with torch.no_grad():
 """
 First output: 227x227
 
-Epoch [20/20], Step [144/148], Loss: 1.0208
-Epoch [20/20], Step [145/148], Loss: 0.7248
-Epoch [20/20], Step [146/148], Loss: 0.8423
 Epoch [20/20], Step [147/148], Loss: 0.9355
 Epoch [20/20], Step [148/148], Loss: 0.9529
 Accuracy of the network on the 10000 test images: 29.070063694267517 %
 
 Second output with original image size: 320x426
-2022-08-04 19:26:18,503 Epoch [20/20], Step [40/148], Loss: 1.5144
-2022-08-04 19:26:20,681 Epoch [20/20], Step [50/148], Loss: 1.7784
-2022-08-04 19:26:22,865 Epoch [20/20], Step [60/148], Loss: 1.6875
-2022-08-04 19:26:25,064 Epoch [20/20], Step [70/148], Loss: 1.8566
-2022-08-04 19:26:27,261 Epoch [20/20], Step [80/148], Loss: 1.7832
-2022-08-04 19:26:29,443 Epoch [20/20], Step [90/148], Loss: 1.7009
-2022-08-04 19:26:31,623 Epoch [20/20], Step [100/148], Loss: 1.5809
-2022-08-04 19:26:33,821 Epoch [20/20], Step [110/148], Loss: 1.9113
-2022-08-04 19:26:36,018 Epoch [20/20], Step [120/148], Loss: 1.8923
+
 2022-08-04 19:26:38,200 Epoch [20/20], Step [130/148], Loss: 1.7649
 2022-08-04 19:26:40,399 Epoch [20/20], Step [140/148], Loss: 1.7015
 Accuracy of the network on the 10000 test images: 16.89171974522293 %
+
+Third output #227x227
+
+2022-08-05 11:56:11,097 Epoch [20/20], Step [130/148], Loss: 0.8438
+2022-08-05 11:56:11,949 Epoch [20/20], Step [140/148], Loss: 0.8687
+Accuracy of the network on the 10000 test images: 32.05095541401274 %
 """
