@@ -38,24 +38,27 @@ if device.type == "cuda":
 
 
 # -------------------------------------------------------------------------------------------------------
-# Load the model
+# Load the model , Comment out the model you want to use
 # -------------------------------------------------------------------------------------------------------
 
 # Actual image size is 432*320
 # Take 1
-# model = mycnn.MyCNN().to(device)
-# resize_to = transforms.Resize((32, 32))
+model = mycnn.MyCNN().to(device)
+resize_to = transforms.Resize((32, 32))
+modelname = "mycnn_"
 
 # Take 2
 # Alexnet model works well for CIFAR-10 when input is scaled to 227x227
-# model = alexnet.AlexNet().to(device)
-resize_to = transforms.Resize((227, 227))
+#model = alexnet.AlexNet().to(device)
+# resize_to = transforms.Resize((227, 227))
+# modelname = "alexnet_"
 
 # Take 3
 # This is supposed to be the best model
-model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
+#model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
 # resizing lower to keep it in memory
-resize_to = transforms.Resize((100, 100))
+#resize_to = transforms.Resize((100, 100))
+# modelname = "RestNet50_"
 
 # -------------------------------------------------------------------------------------------------------
 # Load the data from image folder
@@ -177,7 +180,7 @@ for epoch in range(0, num_epochs):
 
 # Save the model
 torch.save(
-    model.state_dict(), "RestNet50_" + datetime.now().strftime("%H:%M_%B%d%Y") + ".pth"
+    model.state_dict(), modelname + datetime.now().strftime("%H:%M_%B%d%Y") + ".pth"
 )
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -216,19 +219,43 @@ with torch.no_grad():
     )
 
 """
+Using MyCNN #32*32
+
+2022-08-08 15:14:46,442 Epoch [20/20], Step [142/148], Loss: 1.1160 Accuracy: 57.8125
+2022-08-08 15:14:46,529 Epoch [20/20], Step [143/148], Loss: 1.1727 Accuracy: 67.1875
+2022-08-08 15:14:46,534 Epoch [20/20], Step [144/148], Loss: 0.9383 Accuracy: 67.1875
+2022-08-08 15:14:46,620 Epoch [20/20], Step [145/148], Loss: 1.3647 Accuracy: 57.8125
+2022-08-08 15:14:46,624 Epoch [20/20], Step [146/148], Loss: 1.1332 Accuracy: 65.6250
+2022-08-08 15:14:46,729 Epoch [20/20], Step [147/148], Loss: 1.2868 Accuracy: 56.2500
+2022-08-08 15:14:46,735 Epoch [20/20], Step [148/148], Loss: 1.1230 Accuracy: 62.2951
+2022-08-08 15:14:46,837 --->Epoch [20/20], Average Loss: 1.1519 Average Accuracy: 60.5033
+Accuracy of the network on the 3925 test images: 48.86624203821656 % --> Bad
+Accuracy of the network on the 9469 Train images: 64.80092934840005 %
+
 Using AlexNet #227x227
 
-2022-08-05 11:56:11,097 Epoch [20/20], Step [130/148], Loss: 0.8438
-2022-08-05 11:56:11,949 Epoch [20/20], Step [140/148], Loss: 0.8687
-Accuracy of the network on the 10000 test images: 32.05095541401274 %
+2022-08-08 15:08:48,316 Epoch [20/20], Step [142/148], Loss: 0.8499 Accuracy: 71.8750
+2022-08-08 15:08:48,422 Epoch [20/20], Step [143/148], Loss: 0.8604 Accuracy: 68.7500
+2022-08-08 15:08:48,507 Epoch [20/20], Step [144/148], Loss: 0.8620 Accuracy: 79.6875
+2022-08-08 15:08:48,603 Epoch [20/20], Step [145/148], Loss: 0.6733 Accuracy: 78.1250
+2022-08-08 15:08:48,688 Epoch [20/20], Step [146/148], Loss: 0.8089 Accuracy: 75.0000
+2022-08-08 15:08:48,786 Epoch [20/20], Step [147/148], Loss: 0.6540 Accuracy: 73.4375
+2022-08-08 15:08:48,870 Epoch [20/20], Step [148/148], Loss: 1.0395 Accuracy: 67.2131
+2022-08-08 15:08:48,948 --->Epoch [20/20], Average Loss: 0.8318 Average Accuracy: 73.0998
+Accuracy of the network on the 3925 test images: 69.78343949044586 % --> Good
+Accuracy of the network on the 9469 Train images: 76.4283451262013 %
 
 
-Using REsnet (50) #100x100 reduced image size as was out of space
+Using REsnet (50) #100x100 
+(reduced image size as was out of memory)
 
-2022-08-05 17:00:34,732 Epoch [20/20], Step [100/148], Loss: 0.0792
-2022-08-05 17:00:35,971 Epoch [20/20], Step [110/148], Loss: 0.1682
-2022-08-05 17:00:37,210 Epoch [20/20], Step [120/148], Loss: 0.0612
-2022-08-05 17:00:38,450 Epoch [20/20], Step [130/148], Loss: 0.1804
-2022-08-05 17:00:39,688 Epoch [20/20], Step [140/148], Loss: 0.1289
-Accuracy of the network on the 10000 test images: 18.777070063694268 %
+2022-08-08 12:26:48,472 Epoch [20/20], Step [144/148], Loss: 0.1878 Accuracy: 92.1875
+2022-08-08 12:26:48,597 Epoch [20/20], Step [145/148], Loss: 0.1052 Accuracy: 96.8750
+2022-08-08 12:26:48,723 Epoch [20/20], Step [146/148], Loss: 0.2459 Accuracy: 90.6250
+2022-08-08 12:26:48,848 Epoch [20/20], Step [147/148], Loss: 0.1617 Accuracy: 95.3125
+2022-08-08 12:26:48,970 Epoch [20/20], Step [148/148], Loss: 0.1481 Accuracy: 95.0820
+2022-08-08 12:26:49,055 --->Epoch [20/20], Average Loss: 0.1596 Average Accuracy: 94.3924
+Accuracy of the network on the 3925 test images: 69.98726114649682 % ---> Just Good ??
+Accuracy of the network on the 9469 Train images: 94.31830182701447 %
+
 """
