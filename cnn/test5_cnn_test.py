@@ -18,13 +18,15 @@ import alexnet
 import mycnn
 
 # Test with tench - a fresh water fish
-# path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Prague_Vltava_2.jpg/1920px-Tinca_tinca_Prague_Vltava_2.jpg"
+path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Prague_Vltava_2.jpg/1920px-Tinca_tinca_Prague_Vltava_2.jpg"
 # Test with Church
-path = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Church_of_Saint_Simeon_Stylites_01.jpg/1920px-Church_of_Saint_Simeon_Stylites_01.jpg"
+#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Church_of_Saint_Simeon_Stylites_01.jpg/1920px-Church_of_Saint_Simeon_Stylites_01.jpg"
 # Test with Truck ( though we have trained on Garbage truck)
-path = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg/1920px-Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg"
+#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg/1920px-Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg"
 # Test with Garbage truck
-path = "https://upload.wikimedia.org/wikipedia/commons/a/aa/US_Garbage_Truck.jpg"
+#path = "https://upload.wikimedia.org/wikipedia/commons/a/aa/US_Garbage_Truck.jpg"
+
+
 url, filename = path, "test.jpg"
 
 try:
@@ -52,8 +54,8 @@ modelname = "mycnn"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
-    path = "./mycnn_15:14_August082022.pth"
-    resize_to = transforms.Resize((32, 32))
+    path = "./mycnn_19:04_August092022.pth"
+    resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()
     path = "./alexnet_15:08_August082022.pth"
@@ -146,6 +148,7 @@ garbage truck 0.009849738329648972
 parachute 0.008836846798658371
 
 Test on a normal truck (not in training)
+
 garbage truck 0.7310217022895813  --> Good
 gas pump 0.09301765263080597
 chain saw 0.05727909877896309
@@ -160,34 +163,39 @@ chain saw 0.13151127099990845
 church 0.10047641396522522
 cassette player 0.08960364013910294
 
-Ouput MyCNN - Not Bad!
+---------------------------
+Output MyCNN - Not Bad!
+----------------------------
 
-tench 0.9997403025627136
-garbage truck 0.00014096715312916785
-chain saw 4.286440525902435e-05
-parachute 2.5661303880042396e-05
-cassette player 1.4581252798961941e-05
+tench 0.9997798800468445
+cassette player 7.071228174027056e-05
+church 6.913103425176814e-05
+golf ball 4.983545659342781e-05
+English springer 1.9843486370518804e-05
 
-church 0.6350839734077454
-gas pump 0.23613542318344116
-cassette player 0.03102090395987034
-garbage truck 0.026711691170930862
-French horn 0.025713106617331505
+cassette player 0.7094578742980957 --> Not good
+church 0.23043203353881836 --> this is correct
+gas pump 0.059944577515125275
+parachute 0.00016101213986985385
+tench 3.3010521747200983e-06
 
 Test on a normal truck (not in training)
 
-garbage truck 0.3535389304161072 --> Score is low but not bad
-English springer 0.2765689790248871
-gas pump 0.177799791097641
-cassette player 0.0679362341761589
-church 0.06341461837291718
+garbage truck 0.9966506361961365
+gas pump 0.0030325346160680056
+parachute 0.00017644459148868918
+golf ball 0.00013912079157307744
+chain saw 8.742731552047189e-07
 
 Test on Actual Garbage truck
 
-garbage truck 0.5828292965888977 --> not bad
-cassette player 0.11013609915971756
-gas pump 0.09917507320642471
-golf ball 0.0536833293735981
-French horn 0.04130929708480835
+garbage truck 0.9999910593032837
+tench 5.209851224208251e-06
+French horn 1.5582596688545891e-06
+cassette player 1.4181257483869558e-06
+chain saw 5.445947408588836e-07
+
+Results are kind of surprising; The test images are randomly from internet;  Yet even the rudimentry CNN model (myCNN) is able to recognize the garbage truck.
+and the best of breed ResNet seems not to be able to generalize on these test images; thought the accuracy of the model on imagenetter test images was very good
 
 """

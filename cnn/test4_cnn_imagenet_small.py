@@ -38,27 +38,26 @@ if device.type == "cuda":
 
 
 # -------------------------------------------------------------------------------------------------------
-# Load the model , Comment out the model you want to use
+# Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-# Actual image size is 432*320
-# Take 1
-model = mycnn.MyCNN().to(device)
-resize_to = transforms.Resize((32, 32))
 modelname = "mycnn_"
 
-# Take 2
-# Alexnet model works well for CIFAR-10 when input is scaled to 227x227
-#model = alexnet.AlexNet().to(device)
-# resize_to = transforms.Resize((227, 227))
-# modelname = "alexnet_"
+if modelname == "mycnn_":
+    # Actual image size is 432*320
+    model = mycnn.MyCNN().to(device)
+    resize_to = transforms.Resize((227, 227))
+    
+if modelname == "alexnet_":
+    # Alexnet model works well for CIFAR-10 when input is scaled to 227x227
+    model = alexnet.AlexNet().to(device)
+    resize_to = transforms.Resize((227, 227))
+    
+if modelname == "RestNet50_":
+    model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
+    # resizing lower to keep it in memory
+    resize_to = transforms.Resize((100, 100))
 
-# Take 3
-# This is supposed to be the best model
-#model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
-# resizing lower to keep it in memory
-#resize_to = transforms.Resize((100, 100))
-# modelname = "RestNet50_"
 
 # -------------------------------------------------------------------------------------------------------
 # Load the data from image folder
@@ -136,7 +135,7 @@ if stepsize < 10:
 # loop over our epochs
 for epoch in range(0, num_epochs):
     # set the model in training mode
-    model.train()
+    model.train() #IMPORTANT otherwise the model is not in training mode
     # initialize the total training and validation loss
     totalTrainLoss = 0
     totalValLoss = 0
@@ -221,16 +220,14 @@ with torch.no_grad():
 """
 Using MyCNN #32*32
 
-2022-08-08 15:14:46,442 Epoch [20/20], Step [142/148], Loss: 1.1160 Accuracy: 57.8125
-2022-08-08 15:14:46,529 Epoch [20/20], Step [143/148], Loss: 1.1727 Accuracy: 67.1875
-2022-08-08 15:14:46,534 Epoch [20/20], Step [144/148], Loss: 0.9383 Accuracy: 67.1875
-2022-08-08 15:14:46,620 Epoch [20/20], Step [145/148], Loss: 1.3647 Accuracy: 57.8125
-2022-08-08 15:14:46,624 Epoch [20/20], Step [146/148], Loss: 1.1332 Accuracy: 65.6250
-2022-08-08 15:14:46,729 Epoch [20/20], Step [147/148], Loss: 1.2868 Accuracy: 56.2500
-2022-08-08 15:14:46,735 Epoch [20/20], Step [148/148], Loss: 1.1230 Accuracy: 62.2951
-2022-08-08 15:14:46,837 --->Epoch [20/20], Average Loss: 1.1519 Average Accuracy: 60.5033
-Accuracy of the network on the 3925 test images: 48.86624203821656 % --> Bad
-Accuracy of the network on the 9469 Train images: 64.80092934840005 %
+2022-08-09 19:03:59,629 Epoch [20/20], Step [144/148], Loss: 0.0051 Accuracy: 100.0000
+2022-08-09 19:03:59,784 Epoch [20/20], Step [145/148], Loss: 0.0013 Accuracy: 100.0000
+2022-08-09 19:03:59,940 Epoch [20/20], Step [146/148], Loss: 0.0033 Accuracy: 100.0000
+2022-08-09 19:04:00,097 Epoch [20/20], Step [147/148], Loss: 0.0106 Accuracy: 100.0000
+2022-08-09 19:04:00,245 Epoch [20/20], Step [148/148], Loss: 0.0006 Accuracy: 100.0000
+2022-08-09 19:04:00,313 --->Epoch [20/20], Average Loss: 0.0091 Average Accuracy: 99.7677
+Accuracy of the network on the 3925 test images: 36.81528662420382 % --> Bad ?
+Accuracy of the network on the 9469 Train images: 99.63037279543775 %
 
 Using AlexNet #227x227
 

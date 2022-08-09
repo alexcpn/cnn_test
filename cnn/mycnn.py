@@ -32,13 +32,13 @@ class MyCNN(nn.Module):
             # out #[16,16,16]
         )
         self.linear_stack = nn.Sequential(
-            nn.Linear(1024,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
+            nn.Linear(178084,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
             nn.ReLU(),
             nn.Linear(100,10)
             
         )
         self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
-        self.softmax = nn.Softmax(dim=1)
+        #self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         logits = self.cnn_stack(x)
@@ -47,7 +47,7 @@ class MyCNN(nn.Module):
         log.debug("Shape of logits after flatten: %s", logits.shape) # [N, C*H*W]
         logits = self.linear_stack(logits)
         log.debug("Shape of logits after linear stack: %s", logits.shape) # [N,10]
-        #logits = self.softmax(logits)
+        #logits = self.softmax(logits) #IMPORTANT: Softmax  is already there in CrossEntropyLoss
         #log.debug("Shape of logits after logSoftmax: %s", logits.shape) #batchsize, 10
         return logits
 
