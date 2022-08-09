@@ -1,13 +1,15 @@
 """
 Taken as is from https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/CNN_architectures/pytorch_resnet.py
 to first test
+Please also read this https://towardsdatascience.com/understanding-and-coding-a-resnet-in-keras-446d7ff84d33
+to understand. It is actually pretty simple to understand.
 """
 
 import torch
 import torch.nn as nn
 
 
-class block(nn.Module):
+class block(nn.Module): # A single block of ResNet
     def __init__(
         self, in_channels, intermediate_channels, identity_downsample=None, stride=1
     ):
@@ -40,7 +42,8 @@ class block(nn.Module):
         self.stride = stride
 
     def forward(self, x):
-        identity = x.clone()
+
+        identity = x.clone() # deep copy of the input tensor
 
         x = self.conv1(x)
         x = self.bn1(x)
@@ -54,7 +57,8 @@ class block(nn.Module):
         if self.identity_downsample is not None:
             identity = self.identity_downsample(identity)
 
-        x += identity
+        x += identity  #THIS IS THE SKIP CONNECTION Part - the whole idea behind ResNet is to add
+        # the previous layer to the current layer to get a residual connection
         x = self.relu(x)
         return x
 

@@ -87,7 +87,7 @@ train_dataset = torchvision.datasets.ImageFolder(train_dir, train_transforms)
 val_dataset = torchvision.datasets.ImageFolder(val_dir, val_transforms)
 
 # -------------------------------------------------------------------------------------------------------
-# Initialise the dataloaders
+# Initialise the data loaders
 # -------------------------------------------------------------------------------------------------------
 
 workers = 2
@@ -97,7 +97,7 @@ batch_size = 64
 train_loader = torch.utils.data.DataLoader(
     train_dataset,
     batch_size=batch_size,
-    shuffle=True,
+    shuffle=True, #IMPORTANT otherwise the data is not shuffled
     num_workers=workers,
     pin_memory=pin_memory,
     sampler=None,
@@ -154,7 +154,7 @@ for epoch in range(0, num_epochs):
         loss = lossFn(outputs, labels)
         # zero out the gradients, perform the backpropagation step,
         # and update the weights
-        opt.zero_grad()
+        opt.zero_grad() #IMPORTANT otherwise the gradients of previous batches are not zeroed out
         loss.backward()
         totalTrainLoss += loss
         opt.step()
@@ -185,7 +185,7 @@ torch.save(
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
 with torch.no_grad():
-    model.eval()
+    model.eval() #IMPORTANT set model to eval mode before inference
     correct = 0
     total = 0
     for images, labels in test_loader:
