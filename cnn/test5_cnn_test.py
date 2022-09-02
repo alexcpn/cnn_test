@@ -5,10 +5,11 @@ And for imagenette small dataset
 Imagenet (tench, English springer, cassette player, chain saw, church, French horn, garbage truck, gas pump, golf ball, parachute).
 https://github.com/fastai/imagenette
 
-Pre-trained model from test4_cnn_imagenet_small.py in the same folder
+Load the Pre-trained models generated from test4_cnn_imagenet_small.py in the same folder
 """
 
 from importlib.resources import path
+from operator import mod
 import urllib.request
 from PIL import Image
 from torchvision import transforms
@@ -17,8 +18,9 @@ import resnet
 import alexnet
 import mycnn
 
+test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',"test-englishspringer.jpeg"]
 # Test with tench - a fresh water fish
-path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Prague_Vltava_2.jpg/1920px-Tinca_tinca_Prague_Vltava_2.jpg"
+#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Prague_Vltava_2.jpg/1920px-Tinca_tinca_Prague_Vltava_2.jpg"
 # Test with Church
 #path = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Church_of_Saint_Simeon_Stylites_01.jpg/1920px-Church_of_Saint_Simeon_Stylites_01.jpg"
 # Test with Truck ( though we have trained on Garbage truck)
@@ -27,12 +29,12 @@ path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Pr
 #path = "https://upload.wikimedia.org/wikipedia/commons/a/aa/US_Garbage_Truck.jpg"
 
 
-url, filename = path, "test.jpg"
+# url, filename = path, "test.jpg"
 
-try:
-    urllib.request.urlopen(url, filename)
-except:
-    urllib.request.urlretrieve(url, filename)
+# try:
+#     urllib.request.urlopen(url, filename)
+# except:
+#     urllib.request.urlretrieve(url, filename)
 
 # Imagenette classes
 categories = [
@@ -49,7 +51,8 @@ categories = [
 ]
 
 
-# Choose a saved Model - comment out the rest
+# Choose a saved Model - assign the name you want to test with
+# (assuming that you have trained the models)
 modelname = "mycnn"
 
 if modelname == "mycnn":
@@ -69,34 +72,37 @@ if modelname == "resnet50":
 model.load_state_dict(torch.load(path))
 model.eval()
 
-input_image = Image.open(filename)
-preprocess = transforms.Compose(
-    [
-        resize_to,
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        ),  # IMPORTANT: normalize for pretrained models
-    ]
-)
-input_tensor = preprocess(input_image)
-input_batch = input_tensor.unsqueeze(0)  # create a mini-batch as expected by the model
+for filename in test_images:
+    input_image = Image.open('./test-images/'+filename)
+    preprocess = transforms.Compose(
+        [
+            resize_to,
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            ),  # IMPORTANT: normalize for pretrained models
+        ]
+    )
+    input_tensor = preprocess(input_image)
+    input_batch = input_tensor.unsqueeze(0)  # create a mini-batch as expected by the model
 
-# move the input and model to GPU for speed if available
-if torch.cuda.is_available():
-    input_batch = input_batch.to("cuda")
-    model.to("cuda")
+    # move the input and model to GPU for speed if available
+    if torch.cuda.is_available():
+        input_batch = input_batch.to("cuda")
+        model.to("cuda")
 
-with torch.no_grad():
-    output = model(input_batch)
-# The output has unnormalized scores. To get probabilities, you can run a softmax on it.
-probabilities = torch.nn.functional.softmax(output[0], dim=0)
-# print(probabilities)
-
-# Show top categories per image
-top5_prob, top5_catid = torch.topk(probabilities, 5)
-for i in range(top5_prob.size(0)):
-    print(categories[top5_catid[i]], top5_prob[i].item())
+    with torch.no_grad():
+        output = model(input_batch)
+    # The output has unnormalized scores. To get probabilities, you can run a softmax on it.
+    probabilities = torch.nn.functional.softmax(output[0], dim=0)
+    # print(probabilities)
+    print(f"Detecting for class {filename} model {modelname}")
+    print("--------------------------------")
+    # Show top categories per image
+    top5_prob, top5_catid = torch.topk(probabilities, 5)
+    for i in range(top5_prob.size(0)):
+        print(categories[top5_catid[i]], top5_prob[i].item())
+    print("--------------------------------")
 
 """
 Output Resnet50 -Works Great
