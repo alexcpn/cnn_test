@@ -20,6 +20,7 @@ class MyCNN(nn.Module):
             #nn.BatchNorm2d(16),
             nn.ReLU(),
             #nn.AvgPool2d(kernel_size = 3, stride = 1),
+            nn.Dropout(0.25),
             nn.Conv2d(in_channels=16,out_channels=8,kernel_size=5,stride=1), #[16,24,24] [32,20,20] [C, H,W] 
             # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
             #nn.BatchNorm2d(8),
@@ -32,6 +33,7 @@ class MyCNN(nn.Module):
             # out #[16,16,16]
         )
         self.linear_stack = nn.Sequential(
+            nn.Dropout(0.25),
             nn.Linear(178084,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
             nn.ReLU(),
             nn.Linear(100,10)
