@@ -71,7 +71,10 @@ normalize_transform = transforms.Normalize(
 
 
 train_transforms = transforms.Compose(
-    [resize_to, transforms.ToTensor(), normalize_transform]
+    [resize_to, 
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomGrayscale(),
+    transforms.ToTensor(), normalize_transform]
 )
 
 val_dir = os.path.join(data_dir, "val")

@@ -6,7 +6,7 @@ This repo is to understand each model. Also understanding CNN in depth via train
 
 ## Training
 
-Training is happening in [cnn/test4_cnn_imagenet_small.py](cnn/test4_cnn_imagenet_small.py) script
+Training is happening in [cnn/train_cnn.py](cnn/train_cnn.py) script
 
 To train a small subset of Imagenet is used called Imagenette; It is a subset of 10 easily classified classes from 
 Imagenet (tench, English springer, cassette player, chain saw, church, French horn, garbage truck, gas pump, golf ball, parachute).
@@ -42,15 +42,15 @@ Accuracy of the network on the 9469 Train images: 94.31830182701447 %
 
 ## Testing
 
-Testing is happening in [cnn/test5_cnn_test.py](cnn/test5_cnn_test.py)
+Testing is happening in [cnn/test_cnn.py](cnn/test_cnn.py)
 
 The trained models are tested with some test images pulled from the internet.
 
 Example is test with a similar but different class. In Imagenette there is only Garbage Truck class. However when I test with a normal truck, the best network here (comparatively the most modern -Resnet50) thinks it is a cassette player ! though my few layers imple CNN with no Dropout or MaxPooling get's that right.
 
-```
 
---------------------------------
+```
+-------------------------------
 Detecting for class test-garbagetruck.jpg model resnet50
 --------------------------------
 garbage truck 0.9998109936714172
