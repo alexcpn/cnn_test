@@ -10,33 +10,35 @@ log.basicConfig(format='%(asctime)s %(message)s', level=log.INFO)
 
 class MyCNN(nn.Module):
     def __init__(self):
+        self.output_cnn = 10000# 178084 
         super(MyCNN, self).__init__()
         self.cnn_stack = nn.Sequential(
             nn.Conv2d(in_channels=3,out_channels=6,kernel_size=5,stride=1), # In[3,32,32]
             #nn.BatchNorm2d(6), # Commenting BatchNorm and AvgPool in all the layers does not make any difference
             nn.ReLU(),
-            #nn.AvgPool2d(kernel_size = 3, stride = 1),
+            nn.AvgPool2d(kernel_size = 3, stride = 1),
             nn.Conv2d(in_channels=6,out_channels=16,kernel_size=5,stride=1), #[6,28,28]
             #nn.BatchNorm2d(16),
             nn.ReLU(),
-            #nn.AvgPool2d(kernel_size = 3, stride = 1),
-            nn.Dropout(0.25),
+            nn.AvgPool2d(kernel_size = 3, stride = 1),
             nn.Conv2d(in_channels=16,out_channels=8,kernel_size=5,stride=1), #[16,24,24] [32,20,20] [C, H,W] 
             # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
             #nn.BatchNorm2d(8),
             nn.ReLU(),
-            #nn.AvgPool2d(kernel_size = 3, stride = 2),
+            nn.AvgPool2d(kernel_size = 3, stride = 2),
             nn.Conv2d(in_channels=8,out_channels=4,kernel_size=5,stride=1), # [32,20,20]  [C, H,W] 
             #nn.BatchNorm2d(4),
             nn.ReLU(),
-            #nn.AvgPool2d(kernel_size = 3, stride = 2)
+            nn.AvgPool2d(kernel_size = 3, stride = 2)
             # out #[16,16,16]
+            # Adding more layers to keep the FC layers small (out of memory)
+
         )
+     
         self.linear_stack = nn.Sequential(
-            nn.Dropout(0.25),
-            nn.Linear(178084,100),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
+            nn.Linear(self.output_cnn,1000),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
             nn.ReLU(),
-            nn.Linear(100,10)
+            nn.Linear(1000,10)
             
         )
         self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
