@@ -71,7 +71,7 @@ if modelname == "mycnn":
     model = mycnn.MyCNN()
     #path = "./mycnn_19:04_August092022.pth" #without dropout
     #path = "mycnn_11:51_September092022.pth" #with  BathNorm
-    path ="mycnn_20:27_September102022.pth" # Trained with Augmentation
+    path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()

@@ -135,55 +135,168 @@ tench 7.570091838715598e-05
 --------------------------------
 ```
 
-Training with Image Augmentation
+Training with Image Augmentation =Pretty Bad
+Accuracy on Train is 99%, but on test is 27% and it shows
+
 
 ```
 Detecting for class test-tench.jpg model mycnn
 --------------------------------
-tench 0.9014003872871399
-golf ball 0.031259145587682724
-chain saw 0.023627735674381256
-French horn 0.014319909736514091
-English springer 0.009539403021335602
+gas pump 0.9362096786499023
+church 0.04028371348977089
+garbage truck 0.017205338925123215
+French horn 0.005383374635130167
+golf ball 0.0006115910364314914
 --------------------------------
 Detecting for class test-church.jpg model mycnn
 --------------------------------
-church 0.5142383575439453
-French horn 0.4114319980144501
-gas pump 0.04233633354306221
-cassette player 0.0161536056548357
-chain saw 0.008743335492908955
+parachute 0.675105094909668
+tench 0.1729409545660019
+golf ball 0.06034903973340988
+garbage truck 0.04710496589541435
+church 0.030826181173324585
 --------------------------------
 Detecting for class test-garbagetruck.jpg model mycnn
 --------------------------------
-church 0.42769762873649597 --> Bad
-garbage truck 0.401841938495636
-gas pump 0.0972723513841629
-French horn 0.03204435110092163
-golf ball 0.011129915714263916
+garbage truck 0.9598315358161926
+French horn 0.040168385952711105
+chain saw 1.0301283737135236e-07
+church 2.5018373150942352e-08
+gas pump 6.718596165522506e-12
 --------------------------------
 Detecting for class test-truck.jpg model mycnn
 --------------------------------
-garbage truck 0.8944478631019592
-chain saw 0.0458856076002121
-parachute 0.01629267819225788
-French horn 0.01472572423517704
-cassette player 0.007777288090437651
+cassette player 0.9535076022148132
+garbage truck 0.04645875096321106
+chain saw 2.4792923795757815e-05
+parachute 4.40232224718784e-06
+church 2.1299613308656262e-06
 --------------------------------
 Detecting for class test-dog.jpg model mycnn
 --------------------------------
-tench 0.47618719935417175 -->bad
-golf ball 0.46452292799949646
-English springer 0.03245774284005165
-parachute 0.017508018761873245
-cassette player 0.003098340006545186
+English springer 0.9998047947883606
+golf ball 0.00015757889195811003
+chain saw 3.541677142493427e-05
+tench 9.38796972604905e-07
+parachute 5.349552907318866e-07
 --------------------------------
 Detecting for class test-englishspringer.jpeg model mycnn
 --------------------------------
-English springer 0.8400651216506958
-golf ball 0.06779954582452774
-tench 0.04761919006705284
-French horn 0.020101355388760567
-parachute 0.01695236936211586
+church 0.9971303343772888
+parachute 0.0020359137561172247
+chain saw 0.0007650338811799884
+garbage truck 6.353746721288189e-05
+golf ball 4.382040970085654e-06
+--------------------------------
+```
+
+With Average pooling and Augmentation - Very good
+
+Had the test-dog in training 
+
+```
+alex@pop-os:~/coding/cnn_2$ /usr/bin/python3 /home/alex/coding/cnn_2/cnn/test_cnn.py
+Detecting for class test-tench.jpg model mycnn
+--------------------------------
+tench 0.995583713054657
+chain saw 0.0029007361736148596
+garbage truck 0.0012266312260180712
+church 0.00011210612137801945
+English springer 0.00010553816537139937
+--------------------------------
+Detecting for class test-church.jpg model mycnn
+--------------------------------
+church 0.8739343881607056
+French horn 0.09721408039331436
+garbage truck 0.028735153377056122
+parachute 0.00010893271246459335
+gas pump 6.565198873431655e-06
+--------------------------------
+Detecting for class test-garbagetruck.jpg model mycnn
+--------------------------------
+garbage truck 0.9999979734420776
+French horn 2.018884060817072e-06
+cassette player 5.524089519148845e-10
+church 1.1352511812556809e-11
+gas pump 4.400455260594738e-12
+--------------------------------
+Detecting for class test-truck.jpg model mycnn
+--------------------------------
+garbage truck 0.9999994039535522
+chain saw 3.798146792632906e-07
+cassette player 2.4228731376751966e-07
+gas pump 1.556056972162878e-08
+church 1.0774483527598022e-08
+--------------------------------
+Detecting for class test-dog.jpg model mycnn
+--------------------------------
+English springer 1.0
+chain saw 8.128528886137241e-28
+parachute 1.290010897631937e-29
+golf ball 1.664599917784179e-33
+church 5.060423742585771e-34
+--------------------------------
+Detecting for class test-englishspringer.jpeg model mycnn
+--------------------------------
+English springer 0.9999996423721313
+tench 1.9721696276064904e-07
+golf ball 1.2497841339609295e-07
+French horn 3.878648513477856e-09
+garbage truck 3.2409231548458095e-13
+```
+
+Training on Imagenette without the testdog image
+
+Accuracy of the network on the 3925 test images: 47.6687898089172 %
+Accuracy of the network on the 9469 Train images: 96.68391593621291 %
+
+```
+Detecting for class test-tench.jpg model mycnn
+--------------------------------
+chain saw 0.8944089412689209
+tench 0.10334821045398712
+French horn 0.0014589522033929825
+golf ball 0.0004648714093491435
+English springer 0.0003187881375197321
+--------------------------------
+Detecting for class test-church.jpg model mycnn
+--------------------------------
+church 0.8240806460380554
+garbage truck 0.17589929699897766
+French horn 1.1872775758092757e-05
+parachute 4.500088834902272e-06
+tench 1.3441607507047593e-06
+--------------------------------
+Detecting for class test-garbagetruck.jpg model mycnn
+--------------------------------
+garbage truck 0.9996967315673828
+gas pump 0.00027173792477697134
+French horn 1.2280263945285697e-05
+tench 1.187692760140635e-05
+cassette player 6.54455379844876e-06
+--------------------------------
+Detecting for class test-truck.jpg model mycnn
+--------------------------------
+garbage truck 0.8764100670814514
+golf ball 0.116241455078125
+church 0.005874292459338903
+cassette player 0.0012033635284751654
+French horn 0.0002699846518225968
+--------------------------------
+Detecting for class test-dog.jpg model mycnn
+--------------------------------
+golf ball 0.99992835521698----------------------------------> So the dog image is not really learned
+parachute 6.937419675523415e-05
+English springer 2.2174074274516897e-06
+cassette player 1.3578083156527004e-13
+tench 1.1044926773303917e-13
+--------------------------------
+Detecting for class test-englishspringer.jpeg model mycnn
+--------------------------------
+English springer 0.9995927214622498
+tench 0.0003825757303275168
+chain saw 2.389874316577334e-05
+French horn 5.999822860758286e-07
+golf ball 1.2885385558547569e-07
 --------------------------------
 ```
