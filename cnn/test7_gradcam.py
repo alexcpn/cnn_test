@@ -27,7 +27,7 @@ import alexnet
 import mycnn
 import sys
 import numpy as np
-
+import os
 import torch.nn as nn
 
 # Test with tench - a fresh water fish
@@ -56,11 +56,11 @@ categories = [
 
 
 # Choose a saved Model - comment out the rest
-modelname = "mycnn"
+modelname = "resnet50"
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "resnet50"
+#modelname = "resnet50"
 resize_size =(1,1)
 if modelname == "mycnn":
     resize_size = (227,227)
@@ -100,7 +100,7 @@ cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
 
 # Load the image
-filename = "./test-images/test-truck.jpg"
+filename = "./test-images/test-tench.jpg"
 
 input_image = Image.open(filename)
 preprocess = transforms.Compose(
@@ -136,11 +136,12 @@ print( "len grayscale_cam",len(grayscale_cam),grayscale_cam.shape)
 
 # In this example grayscale_cam has only one image in the batch:
 grayscale_cam = grayscale_cam[0, :]
-from PIL import Image
-im = Image.fromarray(grayscale_cam)
-if im.mode != 'RGB':
-    im = im.convert('L')
-im.save("grayscale_cam.jpeg")
+# from PIL import Image
+# im = Image.fromarray(grayscale_cam)
+# if im.mode != 'RGB':
+#     im = im.convert('L')
+# im.save("grayscale_cam.jpeg"
+
 img=np.array(input_image.resize(resize_size),np.float32)
 print("img shape",img.shape,img.max())
 #img = input_image
@@ -150,7 +151,7 @@ img *= (1.0/img.max())
 visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True)
 #cam_images = [show_cam_on_image(img, grayscale, use_rgb=True) for img, grayscale in zip(input_image, grayscale_cam)]
 visualization = Image.fromarray(visualization)
-visualization.save("show_Cam_on_image.jpeg")
+visualization.save(modelname+ "_" + os.path.basename(filename))
 sys.exit()
 
 
