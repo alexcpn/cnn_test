@@ -65,7 +65,7 @@ categories = [
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "mycnn"
+modelname = "resnet50"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
@@ -79,9 +79,9 @@ if modelname == "alexnet":
     resize_to = transforms.Resize((227, 227))
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
-    #path = "./RestNet50_12:26_August082022.pth" # without augumentation
-    path = "./RestNet50_13:49_September102022.pth" #with augumentation
-    resize_to = transforms.Resize((100, 100))
+    path = "./RestNet50_13:49_September102022.pth" # without augumentation
+    #path = "./RestNet50_19:00_September212022.pth" #with augumentation
+    resize_to = transforms.Resize((150, 150))
 
 
 model.load_state_dict(torch.load(path))

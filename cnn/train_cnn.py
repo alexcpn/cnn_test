@@ -41,7 +41,7 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-modelname = "mycnn_"
+modelname = "RestNet50_"
 
 if modelname == "mycnn_":
     # Actual image size is 432*320
@@ -56,7 +56,7 @@ if modelname == "alexnet_":
 if modelname == "RestNet50_":
     model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
     # resizing lower to keep it in memory
-    resize_to = transforms.Resize((100, 100))
+    resize_to = transforms.Resize((150, 150))
 
 
 # -------------------------------------------------------------------------------------------------------
