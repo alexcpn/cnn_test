@@ -90,10 +90,10 @@ for count, value in enumerate(module_list):
     print(count, value)
 print("------------------------")
 
-print("Last layer of module",module_list[11])
-print("Second last layer of module",module_list[8])
+print("Last layer of module",module_list[146])
+print("Second last layer of module",module_list[144])
      
-target_layers = [module_list[8],module_list[11]]
+target_layers = [module_list[144],module_list[146]]
 
 # Construct the CAM object once, and then re-use it on many images:
 cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
