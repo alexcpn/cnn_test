@@ -66,6 +66,7 @@ if modelname == "mycnn":
     resize_size = (227,227)
     model = mycnn.MyCNN()
     path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
+    #path="mycnn_20:09_September242022.pth" # Trained with Test-dog among English Springer
     resize_to = transforms.Resize(resize_size)
 if modelname == "alexnet":
     resize_size = (227,227)
@@ -90,17 +91,45 @@ for count, value in enumerate(module_list):
     print(count, value)
 print("------------------------")
 
-print("Last layer of module",module_list[146])
-print("Second last layer of module",module_list[144])
-     
-target_layers = [module_list[144],module_list[146]]
-
+if modelname=='resnet50':
+    target_layers = [module_list[142],module_list[143],module_list[144],module_list[145],module_list[146],module_list[147]]
+    print("Last layer of module",module_list[146])
+    print("Second last layer of module",module_list[144])
+if modelname=='mycnn':
+    """
+    2 Conv2d(3, 6, kernel_size=(5, 5), stride=(1, 1))
+    3 ReLU()
+    4 AvgPool2d(kernel_size=3, stride=1, padding=0)
+    5 Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
+    6 ReLU()
+    7 AvgPool2d(kernel_size=3, stride=1, padding=0)
+    8 Conv2d(16, 8, kernel_size=(5, 5), stride=(1, 1))
+    9 ReLU()
+    10 AvgPool2d(kernel_size=3, stride=2, padding=0)
+    11 Conv2d(8, 4, kernel_size=(5, 5), stride=(1, 1))
+    12 ReLU()
+    13 AvgPool2d(kernel_size=3, stride=2, padding=0)
+    14 Sequential(
+    (0): Linear(in_features=10000, out_features=1000, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=1000, out_features=10, bias=True)
+    )
+    15 Linear(in_features=10000, out_features=1000, bias=True)
+    16 ReLU()
+    17 Linear(in_features=1000, out_features=10, bias=True)
+    18 Flatten(start_dim=1, end_dim=-1)
+    """
+    target_layers = [module_list[11],module_list[8],module_list[5],module_list[2],module_list[4],module_list[7],module_list[10],module_list[13]]
+    print("Last layer of module",module_list[11])
+    print("Second last layer of module",module_list[13])
+    
 # Construct the CAM object once, and then re-use it on many images:
-cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+cam = GradCAMPlusPlus(model=model, target_layers=target_layers, use_cuda=True)
 
 
 # Load the image
-filename = "./test-images/test-tench.jpg"
+filename = "./test-images/test-englishspringer.jpg"
+filename = "./test-images/test-dog.jpg"
 
 input_image = Image.open(filename)
 preprocess = transforms.Compose(
@@ -151,7 +180,10 @@ img *= (1.0/img.max())
 visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True)
 #cam_images = [show_cam_on_image(img, grayscale, use_rgb=True) for img, grayscale in zip(input_image, grayscale_cam)]
 visualization = Image.fromarray(visualization)
-visualization.save(modelname+ "_" + os.path.basename(filename))
+out_file_name =modelname+ "_" + os.path.basename(filename)
+visualization.save(out_file_name)
+im = Image.open(out_file_name)
+im.show()
 sys.exit()
 
 

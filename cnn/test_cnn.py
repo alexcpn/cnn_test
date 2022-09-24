@@ -51,27 +51,14 @@ categories = [
 ]
 
 
-# # Without dropout mycnn_19:04_August092022.pth
-# 2022-08-09 19:04:00,313 --->Epoch [20/20], Average Loss: 0.0091 Average Accuracy: 99.7677
-# Accuracy of the network on the 3925 test images: 36.81528662420382 % --> Bad ?
-# Accuracy of the network on the 9469 Train images: 99.63037279543775 %
-
-# With dropout "mycnn_10:05_September052022.pth"
-# 2022-09-04 23:47:10,559 --->Epoch [20/20], Average Loss: 2.3022 Average Accuracy: 10.4887
-# Accuracy of the network on the 3925 test images: 9.095541401273886 %
-# Accuracy of the network on the 9469 Train images: 10.486851832294857 %
-
-
-
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "resnet50"
+modelname = "mycnn"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
-    #path = "./mycnn_19:04_August092022.pth" #without dropout
-    #path = "mycnn_11:51_September092022.pth" #with  BathNorm
     path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
+    #path="mycnn_20:09_September242022.pth" # trained with test_dog image along with English Springer class
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()
