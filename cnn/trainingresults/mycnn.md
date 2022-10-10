@@ -300,3 +300,67 @@ French horn 5.999822860758286e-07
 golf ball 1.2885385558547569e-07
 --------------------------------
 ```
+
+Training with 1000 images for dogs from imagenette
+path = "mycnn_19:31_October062022.pth" 
+Accuracy on 3925 test/validation images = 48.12%
+Accuracy on 12198 Train images = 97.7 %
+
+```
+Detecting for class test-tench.jpg model mycnn
+--------------------------------
+tench 0.9752317667007446
+chain saw 0.022564105689525604
+French horn 0.0010246045421808958
+golf ball 0.0006363010033965111
+English springer 0.0004985574632883072
+--------------------------------
+Detecting for class test-church.jpg model mycnn
+--------------------------------
+church 0.8186447620391846
+tench 0.08395818620920181
+gas pump 0.07923215627670288
+garbage truck 0.015643863007426262
+golf ball 0.0011756749590858817
+--------------------------------
+Detecting for class test-garbagetruck.jpg model mycnn
+--------------------------------
+garbage truck 0.9395721554756165
+church 0.022244060412049294
+English springer 0.017220137640833855
+tench 0.012051431462168694
+gas pump 0.008629129268229008
+--------------------------------
+Detecting for class test-truck.jpg model mycnn
+--------------------------------
+garbage truck 0.8234647512435913
+church 0.1747487336397171
+chain saw 0.0006748531013727188
+parachute 0.00037219308433122933
+golf ball 0.0003543358179740608
+--------------------------------
+Detecting for class test-dog.jpg model mycnn
+--------------------------------
+English springer 0.9953160285949707 ---------> Good
+golf ball 0.004683927167207003
+tench 1.2804451943182471e-09
+parachute 9.113509946701015e-11
+cassette player 3.653466071340539e-11
+--------------------------------
+Detecting for class test-englishspringer.jpg model mycnn
+--------------------------------
+chain saw 0.9999861717224121 -----------------> bad and pretty strange
+golf ball 8.905326467356645e-06
+church 2.9996963348821737e-06
+English springer 1.4705417470395332e-06
+French horn 4.584421162689978e-07
+--------------------------------
+Detecting for class test_dogcartoon.jpg model mycnn
+--------------------------------
+English springer 0.738144040107727       --------------> detected cartoon dog as dog - good
+parachute 0.2568896412849426
+golf ball 0.0037569578271359205
+garbage truck 0.0009252948802895844
+cassette player 0.00023350585252046585
+--------------------------------
+```

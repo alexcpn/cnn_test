@@ -18,15 +18,9 @@ import resnet
 import alexnet
 import mycnn
 
-test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',"test-englishspringer.jpeg"]
-# Test with tench - a fresh water fish
-#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tinca_tinca_Prague_Vltava_2.jpg/1920px-Tinca_tinca_Prague_Vltava_2.jpg"
-# Test with Church
-#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Church_of_Saint_Simeon_Stylites_01.jpg/1920px-Church_of_Saint_Simeon_Stylites_01.jpg"
-# Test with Truck ( though we have trained on Garbage truck)
-#path = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg/1920px-Mitsubishi_Motors_Minicab_MiEV_Truck_%28Prototype%29.jpg"
-# Test with Garbage truck
-#path = "https://upload.wikimedia.org/wikipedia/commons/a/aa/US_Garbage_Truck.jpg"
+test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',
+"test-englishspringer.jpg","test_dogcartoon.jpg","test_chaingsaw.jpg","test_chainsawtrain.jpg","test_frenchhorn.jpg",
+"test_frenchhorntrain.jpg","test-golfball.jpg"]
 
 
 # url, filename = path, "test.jpg"
@@ -53,12 +47,13 @@ categories = [
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "mycnn"
+modelname = "resnet50"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
     path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
     #path="mycnn_20:09_September242022.pth" # trained with test_dog image along with English Springer class
+    path = "mycnn_19:31_October062022.pth" # trained with more dog images from imagenet
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()
@@ -68,6 +63,8 @@ if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
     path = "./RestNet50_13:49_September102022.pth" # without augumentation
     #path = "./RestNet50_19:00_September212022.pth" #with augumentation
+    path = "./RestNet50_16:54_October062022.pth" #with cartoon dogs
+    path = "./RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
     resize_to = transforms.Resize((150, 150))
 
 

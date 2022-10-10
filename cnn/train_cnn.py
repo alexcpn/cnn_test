@@ -199,7 +199,7 @@ with torch.no_grad():
         correct += (predicted == labels).float().sum().item()
 
     print(
-        "Accuracy of the network on the {} test images: {} %".format(
+        "Accuracy of the network on the {} test/validation images: {} %".format(
             total, 100 * correct / total
         )
     )
@@ -213,7 +213,7 @@ with torch.no_grad():
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).float().sum().item()
-
+    # this is not really not needed- but just to cross check if what we calculated during training is accurate
     print(
         "Accuracy of the network on the {} Train images: {} %".format(
             total, 100 * correct / total
