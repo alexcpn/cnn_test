@@ -17,6 +17,7 @@ import torch
 import resnet
 import alexnet
 import mycnn
+import mycnn2
 
 test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',
 "test-englishspringer.jpg","test_dogcartoon.jpg","test_chaingsaw.jpg","test_chainsawtrain.jpg","test_frenchhorn.jpg",
@@ -47,13 +48,15 @@ categories = [
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "resnet50"
+modelname = "mycnn"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
-    path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
-    #path="mycnn_20:09_September242022.pth" # trained with test_dog image along with English Springer class
-    path = "mycnn_19:31_October062022.pth" # trained with more dog images from imagenet
+    path = "mycnn_18:07_October142022.pth" 
+    resize_to = transforms.Resize((227, 227))
+if modelname == "mycnn2":
+    model = mycnn2.MyCNN2()
+    path ="mycnn2_15:19_October142022.pth" 
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()

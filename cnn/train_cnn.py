@@ -14,11 +14,13 @@ import torchvision.transforms as transforms
 import logging as log
 import alexnet
 import mycnn
+import mycnn2
 import resnet
 import os
 
 log.basicConfig(format="%(asctime)s %(message)s", level=log.INFO)
 
+torch.cuda.empty_cache()
 
 # -------------------------------------------------------------------------------------------------------
 # Code
@@ -41,13 +43,16 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-modelname = "RestNet50_"
+modelname = "mycnn_"
 
 if modelname == "mycnn_":
     # Actual image size is 432*320
     model = mycnn.MyCNN().to(device)
     resize_to = transforms.Resize((227, 227))
-    
+if modelname == "mycnn2_":
+    # Actual image size is 432*320
+    model = mycnn2.MyCNN2().to(device)
+    resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet_":
     # Alexnet model works well for CIFAR-10 when input is scaled to 227x227
     model = alexnet.AlexNet().to(device)

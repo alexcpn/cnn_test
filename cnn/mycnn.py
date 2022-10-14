@@ -36,7 +36,7 @@ class MyCNN(nn.Module):
         )
      
         self.linear_stack = nn.Sequential(
-            nn.Linear(self.output_cnn,1000),# Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
+            nn.Linear(self.output_cnn,1000),
             nn.ReLU(),
             nn.Linear(1000,10)
             
@@ -47,7 +47,7 @@ class MyCNN(nn.Module):
     def forward(self, x):
         logits = self.cnn_stack(x)
         log.debug("Shape of logits: %s", logits.shape)
-        logits = self.flatten(logits)
+        logits = self.flatten(logits) # Note flatten will flatten previous layer output to [N, C*H*W] ex [1,4000]
         log.debug("Shape of logits after flatten: %s", logits.shape) # [N, C*H*W]
         logits = self.linear_stack(logits)
         log.debug("Shape of logits after linear stack: %s", logits.shape) # [N,10]
@@ -55,28 +55,21 @@ class MyCNN(nn.Module):
         #log.debug("Shape of logits after logSoftmax: %s", logits.shape) #batchsize, 10
         return logits
 
-"""
-Without softmax
-Epoch [16/20], Step [400/782], Loss: 1.3586
-Epoch [17/20], Step [400/782], Loss: 1.4267
-Epoch [18/20], Step [400/782], Loss: 1.0434
-Epoch [19/20], Step [400/782], Loss: 1.0897
-Epoch [20/20], Step [400/782], Loss: 0.7910
-Accuracy of the network on the 10000 test images: 55.93 %
-
-Epoch [16/20], Step [400/782], Loss: 0.8177
-Epoch [17/20], Step [400/782], Loss: 0.8234
-Epoch [18/20], Step [400/782], Loss: 0.8429
-Epoch [19/20], Step [400/782], Loss: 0.8053
-Epoch [20/20], Step [400/782], Loss: 0.8036
-Accuracy of the network on the 10000 test images: 57.93 %
-
-Epoch [14/20], Step [400/782], Loss: 1.1985
-Epoch [15/20], Step [400/782], Loss: 1.0795
-Epoch [16/20], Step [400/782], Loss: 1.2245
-Epoch [17/20], Step [400/782], Loss: 0.8649
-Epoch [18/20], Step [400/782], Loss: 1.1103
-Epoch [19/20], Step [400/782], Loss: 0.7874
-Epoch [20/20], Step [400/782], Loss: 1.1336
-Accuracy of the network on the 10000 test images: 59.44 %
-"""
+    def get_output(self,input_width:int,input_height:int,stride:int,kernel_size:int,out_channels:int,padding=0)-> tuple[int,int,int]:
+            """
+            get the output_width,output_height and output_depth after a convolution of input 
+            param input_width:  input_width
+            param input_height:  input_height
+            param stride:  stride of the CNN
+            param kernel_size:  kernel_size or filter size of the CNN
+            param out_channels:  out_channels specified in the CNN layer
+            param padding:  padding defaults to 0
+            returns (output_width,output_height,output_depth)
+            """
+            # Formula (W) = (W-F + 2P)/S +1
+            # Formula (H) = (H-F + 2P)/S +1
+            output_width = (input_width - kernel_size + 2*padding)/stride +1
+            output_height = (input_height - kernel_size + 2*padding)/stride +1
+            output_depth = out_channels
+            return (int(output_width),int(output_height),output_depth)
+        
