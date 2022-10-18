@@ -5,7 +5,7 @@
 import torch.nn as nn
 import logging as log
 
-log.basicConfig(format='%(asctime)s %(message)s', level=log.INFO)
+log.basicConfig(format='%(asctime)s %(message)s', level=log.DEBUG)
 
 
 class MyCNN2(nn.Module):
@@ -13,12 +13,17 @@ class MyCNN2(nn.Module):
 
     def make_block(self,input_depth,out_channel,kernel_size,stride):
         cnn1 =  nn.Conv2d(in_channels=input_depth,out_channels=int(out_channel/2),kernel_size=kernel_size,stride=stride)
-        bn1 = nn.BatchNorm2d(int(out_channel/2))
+        #bn1 = nn.BatchNorm2d(int(out_channel/2))
         relu1 =  nn.ReLU()
+        pool2 = nn.AvgPool2d(kernel_size = 3, stride = 1)
         cnn2 =  nn.Conv2d(in_channels=int(out_channel/2),out_channels=out_channel,kernel_size=kernel_size,stride=stride)
-        bn2 = nn.BatchNorm2d(out_channel)
+        #bn2 = nn.BatchNorm2d(out_channel)
         relu2 =  nn.ReLU()
-        nn_stack = nn.Sequential(cnn1,bn1,relu1,cnn2,bn2,relu2)
+        pool3 = nn.AvgPool2d(kernel_size = 3, stride = 2)
+        cnn3 =  nn.Conv2d(in_channels=out_channel,out_channels=int(out_channel/2),kernel_size=kernel_size,stride=stride)
+        #bn3 = nn.BatchNorm2d(int(out_channel/2))
+        relu3 =  nn.ReLU()
+        nn_stack = nn.Sequential(cnn1,relu1,pool2,cnn2,relu2,pool3,cnn3,relu3)
         return nn_stack
 
     def __init__(self):
@@ -27,34 +32,29 @@ class MyCNN2(nn.Module):
         self.input_width = 227
         self.input_height = 227
         self.in_channel =3
-        out_channel =6
-        kernel_size =5
-        stride =2
+        out_channel =1
+        
 
         self.flatten = nn.Flatten(start_dim=1,end_dim=-1)
+        kernel_size = 6
+        stride =1
+        self.cnn_stack1 = self.make_block(self.in_channel,out_channel*16,kernel_size,stride)
+        self.linear_stack = nn.Linear(83232,1152)
         
-        self.cnn_stack1 = self.make_block(self.in_channel,out_channel,kernel_size,stride)
-        out = self.get_output(self.input_width,self.input_height,stride,kernel_size,out_channel/2)
-        out = self.get_output(out[0],out[1],stride,kernel_size,out_channel)
-        self.linear_stack = nn.Linear(out[0]*out[1]*out[2],1000)
-        print("Linear 1 out ",out[0]*out[1]*out[2])
-
-        self.cnn_stack2 = self.make_block(self.in_channel,out_channel*2,kernel_size,stride)
-        out = self.get_output(self.input_width,self.input_height,stride,kernel_size,out_channel)
-        out = self.get_output(out[0],out[1],stride,kernel_size,out_channel*2)
-        self.linear_stack2 = nn.Linear(out[0]*out[1]*out[2],1000)
-        print("Linear 2 out ",out[0]*out[1]*out[2])
-
-        self.cnn_stack3 = self.make_block(self.in_channel,out_channel*4,kernel_size,stride)
-        out = self.get_output(self.input_width,self.input_height,stride,kernel_size,out_channel*2)
-        out = self.get_output(out[0],out[1],stride,kernel_size,out_channel*4)
-        self.linear_stack3 = nn.Linear(out[0]*out[1]*out[2],1000)
-        print("Linear 3 out ",out[0]*out[1]*out[2])
-
+        kernel_size = 4
+        stride =2 
+        self.cnn_stack2 = self.make_block(self.in_channel,out_channel*16,kernel_size,stride)
+        self.linear_stack2 = nn.Linear(1152,1000)
+        
+        kernel_size =2
+        stride =4
+        self.cnn_stack3 = self.make_block(self.in_channel,out_channel*16,kernel_size,stride)
+        self.linear_stack3 = nn.Linear(32,100)
+        
             
 
-        self.linear_stack4 = nn.Linear(1000,1000)
-        self.linear_stack5 = nn.Linear(1000,10)
+        self.linear_stack4 = nn.Linear(100,10)
+        self.linear_stack5 = nn.Linear(1000,100)
 
     def forward(self, x):
         logits1 = self.cnn_stack1(x)
@@ -63,16 +63,18 @@ class MyCNN2(nn.Module):
         
         logits2 = self.cnn_stack2(x)
         logits2 = self.flatten(logits2)
-        logits2 = self.linear_stack2(logits2)
+        logits2 = self.linear_stack2(logits2+logits1)
 
         logits3 = self.cnn_stack3(x)
         logits3 = self.flatten(logits3)
         logits3 = self.linear_stack3(logits3)
        
-        logits4 =self.linear_stack4(logits3)
-        logits5 =self.linear_stack5(logits4)
+        logits =self.linear_stack5(logits2)
+        logits =self.linear_stack4(logits3+logits)
+        log.debug("Shape of logits after linear stack: %s", logits.shape) # [N,10]
         
-        return logits5
+        
+        return logits
 
     def get_output(self,input_width:int,input_height:int,stride:int,kernel_size:int,out_channels:int,padding=0)-> tuple[int,int,int]:
         """

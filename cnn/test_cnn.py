@@ -48,7 +48,7 @@ categories = [
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "mycnn"
+modelname = "mycnn2"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
@@ -56,7 +56,7 @@ if modelname == "mycnn":
     resize_to = transforms.Resize((227, 227))
 if modelname == "mycnn2":
     model = mycnn2.MyCNN2()
-    path ="mycnn2_15:19_October142022.pth" 
+    path ="mycnn2_16:43_October182022.pth"
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()

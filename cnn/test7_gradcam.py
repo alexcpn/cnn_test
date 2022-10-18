@@ -25,6 +25,7 @@ import torch
 import resnet
 import alexnet
 import mycnn
+import mycnn2
 import sys
 import numpy as np
 import os
@@ -47,23 +48,26 @@ categories = [
 
 
 # Choose a saved Model - comment out the rest
-modelname = "resnet50"
+modelname = "mycnn2"
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
 #modelname = "resnet50"
 resize_size =(1,1)
 if modelname == "mycnn":
-    resize_size = (227,227)
+    resize_size = (227, 227)
     model = mycnn.MyCNN()
-    #path ="mycnn_13:27_September132022.pth" # Trained with Augmentation
-    path="mycnn_20:09_September242022.pth" # Trained with Test-dog among English Springer
-    path = "mycnn_19:31_October062022.pth" # trained with more dog images from imagenet
+    path = "mycnn_18:07_October142022.pth"
+    resize_to = transforms.Resize(resize_size)
+if modelname == "mycnn2":
+    resize_size = (227, 227)
+    model = mycnn2.MyCNN2()
+    path ="mycnn2_16:43_October182022.pth"
     resize_to = transforms.Resize(resize_size)
 if modelname == "alexnet":
     resize_size = (227,227)
     model = alexnet.AlexNet()
-    path = "./alexnet_15:08_August082022.pth"
+    path = "./alexnet_20:56_October102022.pth"
     resize_to = transforms.Resize(resize_size)
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
@@ -84,8 +88,8 @@ module_list =[module for module in model.modules()]
 print("------------------------")
 for count, value in enumerate(module_list):
     
-    #if isinstance(value, (nn.Conv2d,nn.AvgPool2d,nn.BatchNorm2d)):
-    if isinstance(value, (nn.Conv2d)):
+    if isinstance(value, (nn.Conv2d,nn.AvgPool2d,nn.BatchNorm2d)):
+    #if isinstance(value, (nn.Conv2d)):
         print(count, value)
         target_layers.append(value)
 
@@ -99,11 +103,9 @@ print("------------------------")
 #     target_layers = [module_list[11],module_list[8],module_list[5],module_list[2],module_list[4],module_list[7],module_list[10],module_list[13]] # CNN and Avg pooling
 #     #target_layers = [module_list[11],module_list[8],module_list[5],module_list[2]] # CNN only
 
-
     
 # Construct the CAM object once, and then re-use it on many images:
-cam = GradCAMPlusPlus(model=model, target_layers=target_layers, use_cuda=True)
-
+cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
 # Load the images
 
@@ -142,7 +144,7 @@ for filename in test_images:
     targets = [ClassifierOutputTarget(6)] #0 for finch ?
 
     # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
-    grayscale_cam = cam(input_batch, targets=None)
+    grayscale_cam = cam(input_batch, targets=None,aug_smooth=True)
     print( "len grayscale_cam",len(grayscale_cam),grayscale_cam.shape)
 
     # In this example grayscale_cam has only one image in the batch:
@@ -154,11 +156,10 @@ for filename in test_images:
     # im.save("grayscale_cam.jpeg"
 
     img=np.array(input_image.resize(resize_size),np.float32)
+    img = img.reshape(img.shape[1],img.shape[0],img.shape[2])
     print("img shape",img.shape,img.max())
-    #img = input_image
-    img *= (1.0/img.max())
-    #img = Image.fromarray(img)
-    #img.save("tensortoimage.jpg")
+    #img *= (1.0/img.max())
+    img = img/255
     visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True)
     #cam_images = [show_cam_on_image(img, grayscale, use_rgb=True) for img, grayscale in zip(input_image, grayscale_cam)]
     visualization = Image.fromarray(visualization)

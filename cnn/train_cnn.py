@@ -43,7 +43,7 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-modelname = "mycnn_"
+modelname = "mycnn2_"
 
 if modelname == "mycnn_":
     # Actual image size is 432*320
