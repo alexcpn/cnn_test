@@ -144,9 +144,6 @@ test_loader = torch.utils.data.DataLoader(
 if torch.cuda.is_available():
     model.to("cuda")
 
-#precision_per_class = defaultdict(list)
-# wrong_per_class = defaultdict(list)
-# right_per_class = defaultdict(list)
 confusion_matrix = np.zeros((len(categories),len(categories)))
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -195,14 +192,12 @@ with torch.no_grad():
         for _,j in enumerate(wrongly_zipped):
             k = j[0].item() # label
             l = j[1].item() # predicted
-            #wrong_per_class[k].append(l)
             confusion_matrix[k][l] +=1
        
         # Note that this is for a single batch - add to the list associated with class
         for _,j in enumerate(rightly_zipped):
             k = j[0].item() # label
             l = j[1].item() # predicted
-            #right_per_class[k].append(l)
             confusion_matrix[k][l] +=1
     
     #print("Confusion Matrix1=\n",confusion_matrix)
@@ -223,27 +218,9 @@ with torch.no_grad():
         print(f"Average accuracy per class {categories[i]} from confusion matrix {confusion_matrix[i][i]/confusion_matrix[i].sum()}")
         total_correct +=confusion_matrix[i][i]
 
-    print(f"Average Accuracy?precision from confusion matrix is {total_correct/confusion_matrix.sum()}")
+    print(f"Average Accuracy/precision from confusion matrix is {total_correct/confusion_matrix.sum()}")
 
-    # Overall accuracy as below
-    # print(
-    #     "Accuracy of the network on the {} test/validation images: {} %".format(
-    #         total, 100 * correct / total
-    #     ))
-    
-    # for key,val in wrong_per_class.items(): # Key is category and val is a list of wrong classes
-    #     summed_wrong_classes =Counter(val).most_common()
-    #     print(f"**To Predict {categories[key]}")
-    #     for ele in summed_wrong_classes:
-    #         print(f" --Predicted {categories[ele[0]]} count={ele[1]}")
-    #         confusion_matrix[key][ele[0]]=ele[1]
-
-    # for key,val in right_per_class.items(): # Key is category and val is a list of wrong classes
-    #     summed_right_classes =Counter(val).most_common()
-    #     print(f"**To Predict {categories[key]}")
-    #     for ele in summed_right_classes:
-    #         print(f" --Predicted {categories[ele[0]]} count={ele[1]}")
-    
+   
 
     # correct = 0
     # total = 0
