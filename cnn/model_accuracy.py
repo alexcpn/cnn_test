@@ -196,7 +196,6 @@ with torch.no_grad():
             k = j[0].item() # label
             l = j[1].item() # predicted
             wrong_per_class[k].append(l)
-            #print(f"wrong_per_class{j[0].item()}={j[1].item()}",) #wrong_per_class0=3
             confusion_matrix[k][l] +=1
        
         # Note that this is for a single batch - add to the list associated with class
@@ -204,24 +203,7 @@ with torch.no_grad():
             k = j[0].item() # label
             l = j[1].item() # predicted
             right_per_class[k].append(l)
-            #print(f"right_per_class{j[0].item()}={j[1].item()}",) #right_per_class0=0
             confusion_matrix[k][l] +=1
-
-        # the below we need to take the mean of means and there will be rounding errors
-        # for index, element in enumerate(categories):
-        #     rightly_predicted_for_label = ((predicted == labels)*(labels ==index)).sum().item()
-        #     precision = rightly_predicted_for_label/ ((labels == index).sum()) #this is Torch Tensor semantics
-        #     if not math.isnan(precision):
-        #         precision_per_class[element].append(precision.item())
-        #     #print(f"{element}={cal}")
-        
-        #-----------------------------Batched Image Loop out--------------------------------------
-
-    # for key,val in precision_per_class.items():
-    #     avg = np.mean(val)
-    #     precision_per_class[key] = avg
-    #     print(f"Accuracy of Class {key}={avg}")
-
     
     #print("Confusion Matrix1=\n",confusion_matrix)
     # ------------------------------------------------------------------------------------------
