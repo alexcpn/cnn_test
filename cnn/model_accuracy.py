@@ -145,15 +145,15 @@ if torch.cuda.is_available():
     model.to("cuda")
 
 #precision_per_class = defaultdict(list)
-wrong_per_class = defaultdict(list)
-right_per_class = defaultdict(list)
+# wrong_per_class = defaultdict(list)
+# right_per_class = defaultdict(list)
 confusion_matrix = np.zeros((len(categories),len(categories)))
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
 with torch.no_grad():
     model.eval() #IMPORTANT set model to eval mode before inference
-    correct = 0
-    total = 0
+    # correct = 0
+    # total = 0
 
 
     for images, labels in test_loader:
@@ -165,8 +165,8 @@ with torch.no_grad():
         # ------------------------------------------------------------------------------------------
         outputs = model(images)  #Outputs= torch.Size([64, 10]) Probability of each of the 10 classes
         _, predicted = torch.max(outputs.data, 1) # get the class with the highest Probability out Given 1 per image # predicted= torch.Size([64])
-        total += labels.size(0) #labels= torch.Size([64])  This is the truth value per image - the right class
-        correct += (predicted == labels).float().sum().item()  # Find which are correctly classified
+        # total += labels.size(0) #labels= torch.Size([64])  This is the truth value per image - the right class
+        # correct += (predicted == labels).float().sum().item()  # Find which are correctly classified
         
         # Below illustrates the above Torch Tensor semantics
         # >>> import torch
@@ -195,14 +195,14 @@ with torch.no_grad():
         for _,j in enumerate(wrongly_zipped):
             k = j[0].item() # label
             l = j[1].item() # predicted
-            wrong_per_class[k].append(l)
+            #wrong_per_class[k].append(l)
             confusion_matrix[k][l] +=1
        
         # Note that this is for a single batch - add to the list associated with class
         for _,j in enumerate(rightly_zipped):
             k = j[0].item() # label
             l = j[1].item() # predicted
-            right_per_class[k].append(l)
+            #right_per_class[k].append(l)
             confusion_matrix[k][l] +=1
     
     #print("Confusion Matrix1=\n",confusion_matrix)
@@ -226,11 +226,23 @@ with torch.no_grad():
     print(f"Average Accuracy?precision from confusion matrix is {total_correct/confusion_matrix.sum()}")
 
     # Overall accuracy as below
-    print(
-        "Accuracy of the network on the {} test/validation images: {} %".format(
-            total, 100 * correct / total
-        )
-    )
+    # print(
+    #     "Accuracy of the network on the {} test/validation images: {} %".format(
+    #         total, 100 * correct / total
+    #     ))
+    
+    # for key,val in wrong_per_class.items(): # Key is category and val is a list of wrong classes
+    #     summed_wrong_classes =Counter(val).most_common()
+    #     print(f"**To Predict {categories[key]}")
+    #     for ele in summed_wrong_classes:
+    #         print(f" --Predicted {categories[ele[0]]} count={ele[1]}")
+    #         confusion_matrix[key][ele[0]]=ele[1]
+
+    # for key,val in right_per_class.items(): # Key is category and val is a list of wrong classes
+    #     summed_right_classes =Counter(val).most_common()
+    #     print(f"**To Predict {categories[key]}")
+    #     for ele in summed_right_classes:
+    #         print(f" --Predicted {categories[ele[0]]} count={ele[1]}")
     
 
     # correct = 0
