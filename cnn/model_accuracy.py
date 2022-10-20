@@ -4,6 +4,7 @@ Author - Alex Punnen
 """
 
 from datetime import datetime
+from matplotlib.pyplot import bar_label
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -14,7 +15,7 @@ import mycnn2
 import resnet
 import os
 from collections import defaultdict
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 import math
 import numpy as np
 from collections import Counter
@@ -143,63 +144,106 @@ test_loader = torch.utils.data.DataLoader(
 if torch.cuda.is_available():
     model.to("cuda")
 
-precision_per_class = defaultdict(list)
+#precision_per_class = defaultdict(list)
 wrong_per_class = defaultdict(list)
+right_per_class = defaultdict(list)
+confusion_matrix = np.zeros((len(categories),len(categories)))
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
 with torch.no_grad():
     model.eval() #IMPORTANT set model to eval mode before inference
     correct = 0
     total = 0
+
+
     for images, labels in test_loader:
         images = images.to(device)
         labels = labels.to(device)
-        outputs = model(images)
-        #print("Outputs=",outputs.shape) #Outputs= torch.Size([64, 10])
-        _, predicted = torch.max(outputs.data, 1) # get the class with the most probability out
-        #print("predicted=",predicted.shape,predicted[10]) # predicted= torch.Size([64])
-        #print("labels=",labels.shape,labels[10]) #labels= torch.Size([64]) 
-        total += labels.size(0)
-        correct += (predicted == labels).float().sum().item()  #this is Torch Tensor semantics
-        #print("correct",correct) # say 56 out of 64
-        #print("classification_report",classification_report(labels.cpu(), predicted.cpu()))
-        #-------- Lets check also which classes are wrongly predicted with other classes (we need to clip at max prob > .5 to do)
-        mask=(predicted != labels)
+
+        # ------------------------------------------------------------------------------------------
+        # Predict for the batch of images
+        # ------------------------------------------------------------------------------------------
+        outputs = model(images)  #Outputs= torch.Size([64, 10]) Probability of each of the 10 classes
+        _, predicted = torch.max(outputs.data, 1) # get the class with the highest Probability out Given 1 per image # predicted= torch.Size([64])
+        total += labels.size(0) #labels= torch.Size([64])  This is the truth value per image - the right class
+        correct += (predicted == labels).float().sum().item()  # Find which are correctly classified
+        
+        # Below illustrates the above Torch Tensor semantics
+        # >>> import torch
+        # >>> some_integers = torch.tensor((2, 3, 5, 7, 11, 13, 17, 19))
+        # >>> some_integers3 = torch.tensor((12, 3, 5, 7, 11, 13, 17, 19))
+        # >>> (some_integers ==some_integers3)*(some_integers == 3)
+        # tensor([False,  True, False, False, False, False, False, False])
+        # >>> ((some_integers ==some_integers3)*(some_integers >12)).sum().item()
+        # 3
+        
+        # ------------------------------------------------------------------------------------------
+        #  Lets check also which classes are wrongly predicted with other classes  to create a MultiClass confusion matrix
+        # ------------------------------------------------------------------------------------------
+
+        mask=(predicted != labels) # Wrongly predicted
         wrong_predicted =torch.masked_select(predicted,mask)
         wrong_labels =torch.masked_select(labels,mask)
-        zipped = zip(wrong_labels,wrong_predicted)
+        wrongly_zipped = zip(wrong_labels,wrong_predicted)
 
-        for _,j in enumerate(zipped):
-            wrong_per_class[j[0].item()].append(j[1].item())
-            #print(f"wrong_per_class{j[0].item()}={j[1].item()}",)
-
-        for index, element in enumerate(categories):
-            cal = ((predicted == labels)*(labels ==index)).sum().item()/ ((labels == index).sum()) #this is Torch Tensor semantics
-            wrong_class = (predicted != labels)*(labels == index)
-            # >>> import torch
-            # >>> some_integers = torch.tensor((2, 3, 5, 7, 11, 13, 17, 19))
-            # >>> some_integers3 = torch.tensor((12, 3, 5, 7, 11, 13, 17, 19))
-            # >>> (some_integers ==some_integers3)*(some_integers == 3)
-            # tensor([False,  True, False, False, False, False, False, False])
-            # >>> ((some_integers ==some_integers3)*(some_integers >12)).sum().item()
-            # 3
-            if not math.isnan(cal):
-                precision_per_class[element].append(cal.item())
-            #print(f"{element}={cal}")
+        mask=(predicted == labels) # Rightly predicted
+        rightly_predicted =torch.masked_select(predicted,mask)
+        right_labels =rightly_predicted #same torch.masked_select(labels,mask)
+        rightly_zipped = zip(right_labels,rightly_predicted)
         
-    avg_accuracy =[]    
-    for key,val in precision_per_class.items():
-        avg = np.mean(val)
-        precision_per_class[key] = avg
-        avg_accuracy.append(avg)
-        print(f"Accuracy of Class {key}={avg}")
+        # Note that this is for a single batch - add to the list associated with class
+        for _,j in enumerate(wrongly_zipped):
+            k = j[0].item() # label
+            l = j[1].item() # predicted
+            wrong_per_class[k].append(l)
+            #print(f"wrong_per_class{j[0].item()}={j[1].item()}",) #wrong_per_class0=3
+            confusion_matrix[k][l] +=1
+       
+        # Note that this is for a single batch - add to the list associated with class
+        for _,j in enumerate(rightly_zipped):
+            k = j[0].item() # label
+            l = j[1].item() # predicted
+            right_per_class[k].append(l)
+            #print(f"right_per_class{j[0].item()}={j[1].item()}",) #right_per_class0=0
+            confusion_matrix[k][l] +=1
 
-    # Just to cross check with the average accuracy results bleow    
-    print(f"Average accuracy={np.mean(avg_accuracy)}")
+        # the below we need to take the mean of means and there will be rounding errors
+        # for index, element in enumerate(categories):
+        #     rightly_predicted_for_label = ((predicted == labels)*(labels ==index)).sum().item()
+        #     precision = rightly_predicted_for_label/ ((labels == index).sum()) #this is Torch Tensor semantics
+        #     if not math.isnan(precision):
+        #         precision_per_class[element].append(precision.item())
+        #     #print(f"{element}={cal}")
+        
+        #-----------------------------Batched Image Loop out--------------------------------------
 
-    for key,val in wrong_per_class.items():
-        print(f"wrong_per_class {categories[key]}={Counter(val)}")
+    # for key,val in precision_per_class.items():
+    #     avg = np.mean(val)
+    #     precision_per_class[key] = avg
+    #     print(f"Accuracy of Class {key}={avg}")
 
+    
+    #print("Confusion Matrix1=\n",confusion_matrix)
+    # ------------------------------------------------------------------------------------------
+    # Print Confusion matrix in Pretty print format
+    # ------------------------------------------------------------------------------------------
+    print(categories)
+    for i in range(len(categories)):
+        for j in range(len(categories)):
+            print(f"\t{confusion_matrix[i][j]}",end='')
+        print(f"\t{categories[i]}\n",end='')
+    # ------------------------------------------------------------------------------------------
+    # Calculate Accuracy per class
+    # ------------------------------------------------------------------------------------------
+    print("---------------------------------------")
+    total_correct =0
+    for i in range(len(categories)):
+        print(f"Average accuracy per class {categories[i]} from confusion matrix {confusion_matrix[i][i]/confusion_matrix[i].sum()}")
+        total_correct +=confusion_matrix[i][i]
+
+    print(f"Average Accuracy?precision from confusion matrix is {total_correct/confusion_matrix.sum()}")
+
+    # Overall accuracy as below
     print(
         "Accuracy of the network on the {} test/validation images: {} %".format(
             total, 100 * correct / total
@@ -225,28 +269,29 @@ with torch.no_grad():
 
 """
 Output 
------------------------------------------------------------------------------------------
-Accuracy of Class tench=0.8504464285714286
-Accuracy of Class English springer=0.6907253691128322
-Accuracy of Class cassette player=0.7420465648174286
-Accuracy of Class chain saw=0.5169889160564968
-Accuracy of Class church=0.6264965534210205
-Accuracy of Class French horn=0.5337499976158142
-Accuracy of Class garbage truck=0.7543565290314811
-Accuracy of Class gas pump=0.5343750034059797
-Accuracy of Class golf ball=0.5873511944498334
-Accuracy of Class parachute=0.5481353274413517
-Average accuracy=0.6384671883923666
-wrong_per_class tench=Counter({3: 25, 8: 16, 1: 10, 2: 7, 6: 3, 5: 3, 7: 2, 9: 1})
-wrong_per_class English springer=Counter({3: 39, 0: 23, 8: 21, 6: 7, 5: 7, 7: 3, 9: 3, 4: 3, 2: 3})
-wrong_per_class cassette player=Counter({7: 36, 6: 14, 3: 13, 8: 11, 0: 8, 5: 4, 1: 4, 4: 2})
-wrong_per_class chain saw=Counter({0: 49, 1: 30, 6: 27, 7: 22, 5: 21, 4: 19, 2: 12, 8: 8, 9: 4})
-wrong_per_class church=Counter({6: 23, 5: 21, 3: 20, 7: 19, 8: 16, 0: 14, 2: 10, 9: 7, 1: 5})
-wrong_per_class French horn=Counter({3: 64, 4: 26, 2: 22, 1: 21, 7: 19, 0: 13, 8: 12, 6: 11})
-wrong_per_class garbage truck=Counter({3: 28, 4: 23, 2: 14, 7: 14, 0: 8, 5: 5, 1: 4, 8: 2})
-wrong_per_class gas pump=Counter({2: 50, 6: 46, 3: 41, 4: 23, 1: 11, 5: 9, 8: 8, 0: 7, 9: 2})
-wrong_per_class golf ball=Counter({1: 38, 0: 37, 3: 27, 4: 17, 9: 11, 5: 10, 2: 9, 6: 7, 7: 6})
-wrong_per_class parachute=Counter({8: 56, 3: 46, 4: 19, 6: 13, 7: 12, 0: 10, 2: 6, 1: 6, 5: 2})
+2022-10-20 13:38:01,112 Gpu device NVIDIA GeForce RTX 3060 Laptop GPU
+['tench', 'English springer', 'cassette player', 'chain saw', 'church', 'French horn', 'garbage truck', 'gas pump', 'golf ball', 'parachute']
+        320.0   10.0    7.0     25.0    0.0     3.0     3.0     2.0     16.0    1.0     tench
+        23.0    286.0   3.0     39.0    3.0     7.0     7.0     3.0     21.0    3.0     English springer
+        8.0     4.0     265.0   13.0    2.0     4.0     14.0    36.0    11.0    0.0     cassette player
+        49.0    30.0    12.0    194.0   19.0    21.0    27.0    22.0    8.0     4.0     chain saw
+        14.0    5.0     10.0    20.0    274.0   21.0    23.0    19.0    16.0    7.0     church
+        13.0    21.0    22.0    64.0    26.0    206.0   11.0    19.0    12.0    0.0     French horn
+        8.0     4.0     14.0    28.0    23.0    5.0     291.0   14.0    2.0     0.0     garbage truck
+        7.0     11.0    50.0    41.0    23.0    9.0     46.0    222.0   8.0     2.0     gas pump
+        37.0    38.0    9.0     27.0    17.0    10.0    7.0     6.0     237.0   11.0    golf ball
+        10.0    6.0     6.0     46.0    19.0    2.0     13.0    12.0    56.0    220.0   parachute
+---------------------------------------
+Average accuracy per class tench from confusion matrix 0.8268733850129198
+Average accuracy per class English springer from confusion matrix 0.7240506329113924
+Average accuracy per class cassette player from confusion matrix 0.742296918767507
+Average accuracy per class chain saw from confusion matrix 0.5025906735751295
+Average accuracy per class church from confusion matrix 0.6699266503667481
+Average accuracy per class French horn from confusion matrix 0.5228426395939086
+Average accuracy per class garbage truck from confusion matrix 0.7480719794344473
+Average accuracy per class gas pump from confusion matrix 0.5298329355608592
+Average accuracy per class golf ball from confusion matrix 0.5939849624060151
+Average accuracy per class parachute from confusion matrix 0.5641025641025641
+Average Accuracy?precision from confusion matrix is 0.640764331210191
 Accuracy of the network on the 3925 test/validation images: 64.07643312101911 %
------------------------------------------------------------------------------------------
 """
