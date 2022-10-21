@@ -4,17 +4,15 @@ Author - Alex Punnen
 """
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
 import logging as log
-import alexnet
-import mycnn
-import mycnn2
-import resnet
+from models import resnet, alexnet, mycnn, mycnn2
 import os
 import sklearn.metrics as skmc #this has confusion matrix but need to give all in a shot ?
-import numpy as np
+
 
 
 

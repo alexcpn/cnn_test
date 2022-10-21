@@ -24,25 +24,18 @@ Accuracy of MyCNN against Validation is pretty bad though with Train it is good;
 
 Which means that if we change the way of training; a set of smaller CNNS may be as accurate as bigger ones?
 
+### How to Train
+
 ```
-MyCNN
-
-2022-08-09 19:04:00,245 Epoch [20/20], Step [148/148], Loss: 0.0006 Accuracy: 100.0000
-2022-08-09 19:04:00,313 --->Epoch [20/20], Average Loss: 0.0091 Average Accuracy: 99.7677
-Accuracy of the network on the 3925 test images: 36.81528662420382 % --> Bad ?
-Accuracy of the network on the 9469 Train images: 99.63037279543775 %
-
-Resnet50
-
-2022-08-08 12:26:48,970 Epoch [20/20], Step [148/148], Loss: 0.1481 Accuracy: 95.0820
-2022-08-08 12:26:49,055 --->Epoch [20/20], Average Loss: 0.1596 Average Accuracy: 94.3924
-Accuracy of the network on the 3925 test images: 69.98726114649682 % ---> Just Good ??
-Accuracy of the network on the 9469 Train images: 94.31830182701447 %
+cnn_2$ /usr/bin/python3 /home/alex/coding/cnn_2/cnn/train_cnn.py
 ```
-
-## Testing
+## Testing a saved model
 
 Testing is happening in [cnn/test_cnn.py](cnn/test_cnn.py)
+
+```
+ /usr/bin/python3 /home/alex/coding/cnn_2/cnn/test_cnn.py
+ ```
 
 The trained models are tested with some test images pulled from the internet.
 
@@ -68,41 +61,22 @@ English springer 0.0005154424579814076
 gas pump 0.00035581536940298975
 --------------------------------
 ```
+## Testing a saved with GradCam
 
-From `mycnn` model
+Gradcam helps one visualize which parts of the images are important for the CNN when it classifies an object with high probability. After testing a model, you can use this to visualize and debug the test results
 
-```
---------------------------------
-Detecting for class test-garbagetruck.jpg model mycnn
---------------------------------
-garbage truck 0.9999910593032837
-tench 5.209851224208251e-06
-French horn 1.5582596688545891e-06
-cassette player 1.4181257483869558e-06
-chain saw 5.445947408588836e-07
---------------------------------
-Detecting for class test-truck.jpg model mycnn
---------------------------------
-garbage truck 0.9966506361961365
-gas pump 0.0030325346160680056
-parachute 0.00017644459148868918
-golf ball 0.00013912079157307744
-chain saw 8.742731552047189e-07
---------------------------------
-```
-Though accuracy of my model with validation images is very low and it is not able to detect the dog in the image
+To Run
 
 ```
-Detecting for class test-dog.jpg model mycnn
---------------------------------
-gas pump 0.708825409412384
-English springer 0.22835583984851837
-chain saw 0.05654475837945938
-church 0.0025733024813234806
-golf ball 0.002355701057240367
---------------------------------
+/usr/bin/python3 /home/alex/coding/cnn_2/cnn/gradcam_test.py
 ```
-Next is to train with DropOut added to the model ; or some generalization in training like adding all animals and objects as super-set classes in the training itself
+
+Output in gradcam_out folder
+
+Example output for calssification of FrenchHorn by the ResNet50 model here 
+
+![](https://i.imgur.com/vhxaB2d.png)
+
 
 
  Related repo: https://github.com/alexcpn/cnn_in_python

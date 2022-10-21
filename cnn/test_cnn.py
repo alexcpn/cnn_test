@@ -14,10 +14,8 @@ import urllib.request
 from PIL import Image
 from torchvision import transforms
 import torch
-import resnet
-import alexnet
-import mycnn
-import mycnn2
+from models import resnet, alexnet, mycnn, mycnn2
+
 
 test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',
 "test-englishspringer.jpg","test_dogcartoon.jpg","test_chaingsaw.jpg","test_chainsawtrain.jpg","test_frenchhorn.jpg",
@@ -60,17 +58,14 @@ if modelname == "mycnn2":
     resize_to = transforms.Resize((227, 227))
 if modelname == "alexnet":
     model = alexnet.AlexNet()
-    path = "./alexnet_15:08_August082022.pth"
+    path = "alexnet_15:08_August082022.pth"
     resize_to = transforms.Resize((227, 227))
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
-    path = "./RestNet50_13:49_September102022.pth" # without augumentation
-    #path = "./RestNet50_19:00_September212022.pth" #with augumentation
-    path = "./RestNet50_16:54_October062022.pth" #with cartoon dogs
-    path = "./RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
+    path = "RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
     resize_to = transforms.Resize((150, 150))
 
-
+path = "cnn/saved_models/" +path
 model.load_state_dict(torch.load(path))
 model.eval()
 

@@ -12,11 +12,12 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import logging as log
-import alexnet
-import mycnn
-import mycnn2
-import resnet
+from models import resnet, alexnet, mycnn, mycnn2
 import os
+import matplotlib.pyplot as plt
+from matplotlib import ticker
+import numpy as np
+
 
 log.basicConfig(format="%(asctime)s %(message)s", level=log.INFO)
 
@@ -186,81 +187,121 @@ for epoch in range(0, num_epochs):
     )
 
 # Save the model
+path = "cnn/saved_models/" 
+model_save_name =path+ modelname + datetime.now().strftime("%H:%M_%B%d%Y")
 torch.save(
-    model.state_dict(), modelname + datetime.now().strftime("%H:%M_%B%d%Y") + ".pth"
+    model.state_dict(),model_save_name + ".pth"
 )
+
+# Imagenette classes - labels for better description
+categories = [
+    "tench",
+    "English springer",
+    "cassette player",
+    "chain saw",
+    "church",
+    "French horn",
+    "garbage truck",
+    "gas pump",
+    "golf ball",
+    "parachute",
+]
+
+confusion_matrix = np.zeros((len(categories),len(categories)))
 
 # In test phase, we don't need to compute gradients (for memory efficiency)
 with torch.no_grad():
     model.eval() #IMPORTANT set model to eval mode before inference
-    correct = 0
-    total = 0
+    
     for images, labels in test_loader:
         images = images.to(device)
         labels = labels.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).float().sum().item()
 
-    print(
-        "Accuracy of the network on the {} test/validation images: {} %".format(
-            total, 100 * correct / total
-        )
-    )
+        # ------------------------------------------------------------------------------------------
+        # Predict for the batch of images
+        # ------------------------------------------------------------------------------------------
+        outputs = model(images)  #Outputs= torch.Size([64, 10]) Probability of each of the 10 classes
+        _, predicted = torch.max(outputs.data, 1) # get the class with the highest Probability out Given 1 per image # predicted= torch.Size([64])
+        # ------------------------------------------------------------------------------------------
+        #  Lets check also which classes are wrongly predicted with other classes  to create a MultiClass confusion matrix
+        # ------------------------------------------------------------------------------------------
 
-    correct = 0
-    total = 0
-    for images, labels in train_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).float().sum().item()
-    # this is not really not needed- but just to cross check if what we calculated during training is accurate
-    print(
-        "Accuracy of the network on the {} Train images: {} %".format(
-            total, 100 * correct / total
-        )
-    )
+        mask=(predicted != labels) # Wrongly predicted
+        wrong_predicted =torch.masked_select(predicted,mask)
+        wrong_labels =torch.masked_select(labels,mask)
+        wrongly_zipped = zip(wrong_labels,wrong_predicted)
 
-"""
-Using MyCNN #32*32
+        mask=(predicted == labels) # Rightly predicted
+        rightly_predicted =torch.masked_select(predicted,mask)
+        right_labels =rightly_predicted #same torch.masked_select(labels,mask)
+        rightly_zipped = zip(right_labels,rightly_predicted)
+        
+        # Note that this is for a single batch - add to the list associated with class
+        for _,j in enumerate(wrongly_zipped):
+            k = j[0].item() # label
+            l = j[1].item() # predicted
+            confusion_matrix[k][l] +=1
+       
+        # Note that this is for a single batch - add to the list associated with class
+        for _,j in enumerate(rightly_zipped):
+            k = j[0].item() # label
+            l = j[1].item() # predicted
+            confusion_matrix[k][l] +=1
+    
+    #print("Confusion Matrix1=\n",confusion_matrix)
+    # ------------------------------------------------------------------------------------------
+    # Print Confusion matrix in Pretty print format
+    # ------------------------------------------------------------------------------------------
+    print(categories)
+    for i in range(len(categories)):
+        for j in range(len(categories)):
+            print(f"\t{confusion_matrix[i][j]}",end='')
+        print(f"\t{categories[i]}\n",end='')
+    # ------------------------------------------------------------------------------------------
+    # Calculate Accuracy per class
+    # ------------------------------------------------------------------------------------------
+    print("---------------------------------------")
+    print(f"Accuracy/precision from confusion matrix is {round(confusion_matrix.trace()/confusion_matrix.sum(),2)}")
+    print("---------------------------------------")
+    for i in range(len(categories)):
+        print(f"---Accuracy for class {categories[i]} = {round(confusion_matrix[i][i]/confusion_matrix[i].sum(),2)}")
+    
+    # ---------------------------------------------------
+    # Plot this in a good figure
+    # ---------------------------------------------------
+        
 
-2022-08-09 19:03:59,629 Epoch [20/20], Step [144/148], Loss: 0.0051 Accuracy: 100.0000
-2022-08-09 19:03:59,784 Epoch [20/20], Step [145/148], Loss: 0.0013 Accuracy: 100.0000
-2022-08-09 19:03:59,940 Epoch [20/20], Step [146/148], Loss: 0.0033 Accuracy: 100.0000
-2022-08-09 19:04:00,097 Epoch [20/20], Step [147/148], Loss: 0.0106 Accuracy: 100.0000
-2022-08-09 19:04:00,245 Epoch [20/20], Step [148/148], Loss: 0.0006 Accuracy: 100.0000
-2022-08-09 19:04:00,313 --->Epoch [20/20], Average Loss: 0.0091 Average Accuracy: 99.7677
-Accuracy of the network on the 3925 test images: 36.81528662420382 % --> Bad ?
-Accuracy of the network on the 9469 Train images: 99.63037279543775 %
-
-Using AlexNet #227x227
-
-2022-08-08 15:08:48,316 Epoch [20/20], Step [142/148], Loss: 0.8499 Accuracy: 71.8750
-2022-08-08 15:08:48,422 Epoch [20/20], Step [143/148], Loss: 0.8604 Accuracy: 68.7500
-2022-08-08 15:08:48,507 Epoch [20/20], Step [144/148], Loss: 0.8620 Accuracy: 79.6875
-2022-08-08 15:08:48,603 Epoch [20/20], Step [145/148], Loss: 0.6733 Accuracy: 78.1250
-2022-08-08 15:08:48,688 Epoch [20/20], Step [146/148], Loss: 0.8089 Accuracy: 75.0000
-2022-08-08 15:08:48,786 Epoch [20/20], Step [147/148], Loss: 0.6540 Accuracy: 73.4375
-2022-08-08 15:08:48,870 Epoch [20/20], Step [148/148], Loss: 1.0395 Accuracy: 67.2131
-2022-08-08 15:08:48,948 --->Epoch [20/20], Average Loss: 0.8318 Average Accuracy: 73.0998
-Accuracy of the network on the 3925 test images: 69.78343949044586 % --> Good
-Accuracy of the network on the 9469 Train images: 76.4283451262013 %
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.title('Confusion Matrix', fontsize=18)
+    ax.matshow(confusion_matrix, cmap=plt.cm.Blues, alpha=0.7)
+    ax.set_xticklabels([''] + categories,rotation=90)
+    ax.set_yticklabels([''] + categories)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    for i in range(confusion_matrix.shape[0]):
+        for j in range(confusion_matrix.shape[1]):
+            ax.text(x=j, y=i,s=int(confusion_matrix[i, j]), va='center', ha='center', size='xx-small')
+            if ( i==j):
+                acc = round(confusion_matrix[i][i]/confusion_matrix[i].sum(),2)
+                ax.text(x=len(categories)+1, y=i,s=acc, va='center', ha='center', size='xx-small')
+    plt.savefig(model_save_name +"_cm.jpg")
 
 
-Using REsnet (50) #100x100 
-(reduced image size as was out of memory)
+    # correct = 0
+    # total = 0
+    # for images, labels in train_loader:
+    #     images = images.to(device)
+    #     labels = labels.to(device)
+    #     outputs = model(images)
+    #     _, predicted = torch.max(outputs.data, 1)
+    #     total += labels.size(0)
+    #     correct += (predicted == labels).float().sum().item()
+    # # this is not really not needed- but just to cross check if what we calculated during training is accurate
+    # print(
+    #     "Accuracy of the network on the {} Train images: {} %".format(
+    #         total, 100 * correct / total
+    #     )
+    # )
 
-2022-08-08 12:26:48,472 Epoch [20/20], Step [144/148], Loss: 0.1878 Accuracy: 92.1875
-2022-08-08 12:26:48,597 Epoch [20/20], Step [145/148], Loss: 0.1052 Accuracy: 96.8750
-2022-08-08 12:26:48,723 Epoch [20/20], Step [146/148], Loss: 0.2459 Accuracy: 90.6250
-2022-08-08 12:26:48,848 Epoch [20/20], Step [147/148], Loss: 0.1617 Accuracy: 95.3125
-2022-08-08 12:26:48,970 Epoch [20/20], Step [148/148], Loss: 0.1481 Accuracy: 95.0820
-2022-08-08 12:26:49,055 --->Epoch [20/20], Average Loss: 0.1596 Average Accuracy: 94.3924
-Accuracy of the network on the 3925 test images: 69.98726114649682 % ---> Just Good ??
-Accuracy of the network on the 9469 Train images: 94.31830182701447 %
 
-"""

@@ -1,5 +1,5 @@
 import unittest
-import mycnn
+from model import mycnn
 
 class TestMyCNN(unittest.TestCase):
 

@@ -22,11 +22,7 @@ import urllib.request
 from PIL import Image
 from torchvision import transforms
 import torch
-import resnet
-import alexnet
-import mycnn
-import mycnn2
-import sys
+from models import resnet, alexnet, mycnn, mycnn2
 import numpy as np
 import os
 import torch.nn as nn
@@ -48,7 +44,7 @@ categories = [
 
 
 # Choose a saved Model - comment out the rest
-modelname = "mycnn2"
+modelname = "resnet50"
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
@@ -67,18 +63,18 @@ if modelname == "mycnn2":
 if modelname == "alexnet":
     resize_size = (227,227)
     model = alexnet.AlexNet()
-    path = "./alexnet_20:56_October102022.pth"
+    path = "alexnet_20:56_October102022.pth"
     resize_to = transforms.Resize(resize_size)
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
     resize_size =(150,150)
     #path = "./RestNet50_12:26_August082022.pth" # without augumentation
-    path = "./RestNet50_13:49_September102022.pth" #with augumentation
-    path = "./RestNet50_16:54_October062022.pth" #with cartoon dogs
-    path = "./RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
+    path = "RestNet50_13:49_September102022.pth" #with augumentation
+    path = "RestNet50_16:54_October062022.pth" #with cartoon dogs
+    path = "RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
     resize_to = transforms.Resize(resize_size)
 
-
+path = "cnn/saved_models/" +path
 model.load_state_dict(torch.load(path))
 model.eval()
 
@@ -145,7 +141,7 @@ for filename in test_images:
 
     # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
     grayscale_cam = cam(input_batch, targets=None,aug_smooth=True)
-    print( "len grayscale_cam",len(grayscale_cam),grayscale_cam.shape)
+    #print( "len grayscale_cam",len(grayscale_cam),grayscale_cam.shape)
 
     # In this example grayscale_cam has only one image in the batch:
     grayscale_cam = grayscale_cam[0, :]
@@ -157,19 +153,18 @@ for filename in test_images:
 
     img=np.array(input_image.resize(resize_size),np.float32)
     img = img.reshape(img.shape[1],img.shape[0],img.shape[2])
-    print("img shape",img.shape,img.max())
-    #img *= (1.0/img.max())
+    #print("img shape",img.shape,img.max())
     img = img/255
     visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True)
     #cam_images = [show_cam_on_image(img, grayscale, use_rgb=True) for img, grayscale in zip(input_image, grayscale_cam)]
     visualization = Image.fromarray(visualization)
-    out_file_name =modelname+ "_" + os.path.basename(filename)
+    out_file_name ="cnn/gradcam_out/" +modelname+ "_" + os.path.basename(filename)
     visualization.save(out_file_name)
-    print("Visualization saved- now trying to show (GUI mode)")
+    #print("Visualization saved- now trying to show (GUI mode)")
     im = Image.open(out_file_name)
     im.show()
     
-sys.exit()
+
 
 
 

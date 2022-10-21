@@ -1,3 +1,6 @@
 data*/** 
 imagenette2-320/*
 */__pycache__/*
+.vscode/settings.json
+.gitignore
+cnn/models/__pycache__/**

@@ -1,4 +1,5 @@
 # My CNN Model
+# Author Alex Punnen
 # https://alexcpn.medium.com/cnn-from-scratch-b97057d8cef4
 # To get the filter use this https://docs.google.com/spreadsheets/d/1tsi4Yl2TwrPg5Ter8P_G30tFLSGQ1i29jqFagxNFa4A/edit?usp=sharing
 
@@ -14,20 +15,20 @@ class MyCNN(nn.Module):
         super(MyCNN, self).__init__()
         self.cnn_stack = nn.Sequential(
             nn.Conv2d(in_channels=3,out_channels=6,kernel_size=5,stride=1), # In[3,32,32]
-            #nn.BatchNorm2d(6), # Commenting BatchNorm and AvgPool in all the layers does not make any difference
+            nn.BatchNorm2d(6), 
             nn.ReLU(),
             nn.AvgPool2d(kernel_size = 3, stride = 1),
             nn.Conv2d(in_channels=6,out_channels=16,kernel_size=5,stride=1), #[6,28,28]
-            #nn.BatchNorm2d(16),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.AvgPool2d(kernel_size = 3, stride = 1),
             nn.Conv2d(in_channels=16,out_channels=8,kernel_size=5,stride=1), #[16,24,24] [32,20,20] [C, H,W] 
             # Note when images are added as a batch the size of the output is [N, C, H, W], where N is the batch size ex [1,10,20,20]
-            #nn.BatchNorm2d(8),
+            nn.BatchNorm2d(8),
             nn.ReLU(),
             nn.AvgPool2d(kernel_size = 3, stride = 2),
             nn.Conv2d(in_channels=8,out_channels=4,kernel_size=5,stride=1), # [32,20,20]  [C, H,W] 
-            #nn.BatchNorm2d(4),
+            nn.BatchNorm2d(4),
             nn.ReLU(),
             nn.AvgPool2d(kernel_size = 3, stride = 2)
             # out #[16,16,16]
