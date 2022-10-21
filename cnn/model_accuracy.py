@@ -2,9 +2,8 @@
 Utility to check Precision and Recall of a  trained model
 Author - Alex Punnen 
 """
-
-from datetime import datetime
-from matplotlib.pyplot import bar_label
+import matplotlib.pyplot as plt
+from matplotlib import ticker
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -14,11 +13,9 @@ import mycnn
 import mycnn2
 import resnet
 import os
-from collections import defaultdict
-from sklearn.metrics import classification_report, confusion_matrix
-import math
+import sklearn.metrics as skmc #this has confusion matrix but need to give all in a shot ?
 import numpy as np
-from collections import Counter
+
 
 
 log.basicConfig(format="%(asctime)s %(message)s", level=log.INFO)
@@ -57,7 +54,7 @@ categories = [
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "mycnn2"
+modelname = "resnet50"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
@@ -213,14 +210,31 @@ with torch.no_grad():
     # Calculate Accuracy per class
     # ------------------------------------------------------------------------------------------
     print("---------------------------------------")
-    total_correct =0
+    print(f"Accuracy/precision from confusion matrix is {round(confusion_matrix.trace()/confusion_matrix.sum(),2)}")
+    print("---------------------------------------")
     for i in range(len(categories)):
-        print(f"Average accuracy per class {categories[i]} from confusion matrix {confusion_matrix[i][i]/confusion_matrix[i].sum()}")
-        total_correct +=confusion_matrix[i][i]
+        print(f"---Accuracy for class {categories[i]} = {round(confusion_matrix[i][i]/confusion_matrix[i].sum(),2)}")
+    
+    # ---------------------------------------------------
+    # Plot this in a good figure
+    # ---------------------------------------------------
+        
 
-    print(f"Average Accuracy/precision from confusion matrix is {total_correct/confusion_matrix.sum()}")
-
-   
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.title('Confusion Matrix', fontsize=18)
+    ax.matshow(confusion_matrix, cmap=plt.cm.Blues, alpha=0.7)
+    ax.set_xticklabels([''] + categories,rotation=90)
+    ax.set_yticklabels([''] + categories)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    for i in range(confusion_matrix.shape[0]):
+        for j in range(confusion_matrix.shape[1]):
+            ax.text(x=j, y=i,s=int(confusion_matrix[i, j]), va='center', ha='center', size='xx-small')
+            if ( i==j):
+                acc = round(confusion_matrix[i][i]/confusion_matrix[i].sum(),2)
+                ax.text(x=len(categories)+1, y=i,s=acc, va='center', ha='center', size='xx-small')
+    plt.savefig("confusion_matrix_"+modelname +".jpg")
 
     # correct = 0
     # total = 0
@@ -240,29 +254,28 @@ with torch.no_grad():
 
 """
 Output 
-2022-10-20 13:38:01,112 Gpu device NVIDIA GeForce RTX 3060 Laptop GPU
 ['tench', 'English springer', 'cassette player', 'chain saw', 'church', 'French horn', 'garbage truck', 'gas pump', 'golf ball', 'parachute']
-        320.0   10.0    7.0     25.0    0.0     3.0     3.0     2.0     16.0    1.0     tench
-        23.0    286.0   3.0     39.0    3.0     7.0     7.0     3.0     21.0    3.0     English springer
-        8.0     4.0     265.0   13.0    2.0     4.0     14.0    36.0    11.0    0.0     cassette player
-        49.0    30.0    12.0    194.0   19.0    21.0    27.0    22.0    8.0     4.0     chain saw
-        14.0    5.0     10.0    20.0    274.0   21.0    23.0    19.0    16.0    7.0     church
-        13.0    21.0    22.0    64.0    26.0    206.0   11.0    19.0    12.0    0.0     French horn
-        8.0     4.0     14.0    28.0    23.0    5.0     291.0   14.0    2.0     0.0     garbage truck
-        7.0     11.0    50.0    41.0    23.0    9.0     46.0    222.0   8.0     2.0     gas pump
-        37.0    38.0    9.0     27.0    17.0    10.0    7.0     6.0     237.0   11.0    golf ball
-        10.0    6.0     6.0     46.0    19.0    2.0     13.0    12.0    56.0    220.0   parachute
+        333.0   17.0    7.0     12.0    0.0     1.0     6.0     0.0     8.0     3.0     tench
+        10.0    314.0   4.0     41.0    3.0     1.0     10.0    0.0     7.0     5.0     English springer
+        2.0     12.0    305.0   16.0    0.0     0.0     15.0    4.0     2.0     1.0     cassette player
+        12.0    25.0    21.0    254.0   0.0     5.0     53.0    1.0     4.0     11.0    chain saw
+        3.0     7.0     11.0    14.0    308.0   5.0     45.0    8.0     5.0     3.0     church
+        14.0    36.0    49.0    50.0    3.0     207.0   24.0    7.0     2.0     2.0     French horn
+        1.0     3.0     11.0    12.0    2.0     2.0     353.0   2.0     1.0     2.0     garbage truck
+        1.0     9.0     71.0    28.0    7.0     1.0     85.0    211.0   1.0     5.0     gas pump
+        8.0     15.0    16.0    24.0    3.0     2.0     13.0    2.0     291.0   25.0    golf ball
+        4.0     6.0     3.0     20.0    6.0     1.0     13.0    3.0     8.0     326.0   parachute
 ---------------------------------------
-Average accuracy per class tench from confusion matrix 0.8268733850129198
-Average accuracy per class English springer from confusion matrix 0.7240506329113924
-Average accuracy per class cassette player from confusion matrix 0.742296918767507
-Average accuracy per class chain saw from confusion matrix 0.5025906735751295
-Average accuracy per class church from confusion matrix 0.6699266503667481
-Average accuracy per class French horn from confusion matrix 0.5228426395939086
-Average accuracy per class garbage truck from confusion matrix 0.7480719794344473
-Average accuracy per class gas pump from confusion matrix 0.5298329355608592
-Average accuracy per class golf ball from confusion matrix 0.5939849624060151
-Average accuracy per class parachute from confusion matrix 0.5641025641025641
-Average Accuracy?precision from confusion matrix is 0.640764331210191
-Accuracy of the network on the 3925 test/validation images: 64.07643312101911 %
+Accuracy/precision from confusion matrix is 0.74
+---------------------------------------
+---Accuracy for class tench = 0.86
+---Accuracy for class English springer = 0.79
+---Accuracy for class cassette player = 0.85
+---Accuracy for class chain saw = 0.66
+---Accuracy for class church = 0.75
+---Accuracy for class French horn = 0.53
+---Accuracy for class garbage truck = 0.91
+---Accuracy for class gas pump = 0.5
+---Accuracy for class golf ball = 0.73
+---Accuracy for class parachute = 0.84
 """
