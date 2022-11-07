@@ -18,9 +18,8 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 
 
 from importlib.resources import path
-import urllib.request
 from PIL import Image
-from torchvision import transforms
+from torchvision import transforms, datasets
 import torch
 from models import resnet, alexnet, mycnn, mycnn2
 import numpy as np
@@ -28,10 +27,28 @@ import os
 import torch.nn as nn
 
 
-# Imagenette classes
-categories = [
-    "tench",
+#-----------------------------------------------------------------------------------------------------
+# Order the categories as per how Dataloader loads it
+#-----------------------------------------------------------------------------------------------------
+data_dir = "./imagenette2-320"
+train_dir = os.path.join(data_dir, "train")
+train_dataset = datasets.ImageFolder(train_dir,[])
+
+foldername_to_class = { 'dogs50A-train' : "dog",
+                        'n01440764': "tench",
+                        'n02979186': "cassette player", 
+                        'n03000684': "chain saw",
+                        'n03028079': "church",
+                        'n03394916': "French horn",
+                        'n03417042': "garbage truck",
+                        'n03425413': "gas pump",
+                        'n03445777':  "golf ball",
+                        'n03888257': "parachute" }
+
+# Imagenette classes - labels for better description
+categories_ref = [
     "English springer",
+    "tench",
     "cassette player",
     "chain saw",
     "church",
@@ -42,6 +59,15 @@ categories = [
     "parachute",
 ]
 
+# sort as value to fit the directory order to labels to be sure
+print("Image to Folder Index",train_dataset.class_to_idx)
+sorted_vals = dict(sorted(train_dataset.class_to_idx.items(), key=lambda item: item[1]))
+categories =[]
+for key in sorted_vals:
+    classname = foldername_to_class[key]
+    categories.append(classname)
+
+print("Categories",categories)
 
 # Choose a saved Model - comment out the rest
 modelname = "resnet50"
@@ -54,6 +80,7 @@ if modelname == "mycnn":
     resize_size = (227, 227)
     model = mycnn.MyCNN()
     path = "mycnn_18:07_October142022.pth"
+    path ="mycnn_13:01_October272022.pth" #dual class only
     resize_to = transforms.Resize(resize_size)
 if modelname == "mycnn2":
     resize_size = (227, 227)
@@ -67,22 +94,58 @@ if modelname == "alexnet":
     resize_to = transforms.Resize(resize_size)
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
-    resize_size =(150,150)
+    resize_size =(227,227)
     #path = "./RestNet50_12:26_August082022.pth" # without augumentation
     path = "RestNet50_13:49_September102022.pth" #with augumentation
     path = "RestNet50_16:54_October062022.pth" #with cartoon dogs
     path = "RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
+    path ="RestNet50_11:45_November072022.pth" #227*227
     resize_to = transforms.Resize(resize_size)
 
 path = "cnn/saved_models/" +path
 model.load_state_dict(torch.load(path))
 model.eval()
 
+
+def flatten_model(modules):
+    def flatten_list(_2d_list):
+        flat_list = []
+        # Iterate through the outer list
+        for element in _2d_list:
+            if type(element) is list:
+                # If the element is of type list, iterate through the sublist
+                for item in element:
+                    flat_list.append(item)
+            else:
+                flat_list.append(element)
+        return flat_list
+
+    ret = []
+    try:
+        for _, n in modules:
+            ret.append(loopthrough(n))
+    except:
+        try:
+            if str(modules._modules.items()) == "odict_items([])":
+                ret.append(modules)
+            else:
+                for _, n in modules._modules.items():
+                    ret.append(loopthrough(n))
+        except:
+            ret.append(modules)
+    return flatten_list(ret)
+
+
 # Set the target for the CAM layer; Add all the layers in the model
 target_layers =[]
 module_list =[module for module in model.modules()]
+
+
+flatted_list= flatten_model(module_list)
+
+
 print("------------------------")
-for count, value in enumerate(module_list):
+for count, value in enumerate(flatted_list):
     
     if isinstance(value, (nn.Conv2d,nn.AvgPool2d,nn.BatchNorm2d)):
     #if isinstance(value, (nn.Conv2d)):
@@ -90,6 +153,7 @@ for count, value in enumerate(module_list):
         target_layers.append(value)
 
 print("------------------------")
+
 
 # Alternative is to add specific layers and check
 # if modelname=='resnet50':

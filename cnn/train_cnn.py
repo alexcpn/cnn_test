@@ -17,6 +17,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
+#from PIL import ImageFile
 
 
 log.basicConfig(format="%(asctime)s %(message)s", level=log.INFO)
@@ -28,7 +29,6 @@ torch.cuda.empty_cache()
 # -------------------------------------------------------------------------------------------------------
 
 # Define relevant variables for the ML task
-batch_size = 64
 num_classes = 10
 learning_rate = 0.001
 num_epochs = 20  # actual 20 epochs
@@ -44,12 +44,12 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-modelname = "mycnn2_"
+modelname = "RestNet50_"
 
 if modelname == "mycnn_":
     # Actual image size is 432*320
     model = mycnn.MyCNN().to(device)
-    resize_to = transforms.Resize((227, 227))
+    resize_to = transforms.Resize((150, 150))
 if modelname == "mycnn2_":
     # Actual image size is 432*320
     model = mycnn2.MyCNN2().to(device)
@@ -62,7 +62,7 @@ if modelname == "alexnet_":
 if modelname == "RestNet50_":
     model = resnet.ResNet50(img_channel=3, num_classes=10).to(device)
     # resizing lower to keep it in memory
-    resize_to = transforms.Resize((150, 150))
+    resize_to = transforms.Resize((227, 227))
 
 
 # -------------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ normalize_transform = transforms.Normalize(
 train_transforms = transforms.Compose(
     [resize_to, 
     transforms.RandomHorizontalFlip(),
-    transforms.RandomGrayscale(),
+    transforms.RandomGrayscale(0.5),
     transforms.ToTensor(), normalize_transform]
 )
 
@@ -91,16 +91,63 @@ val_transforms = transforms.Compose(
 
 
 train_dataset = torchvision.datasets.ImageFolder(train_dir, train_transforms)
-
 val_dataset = torchvision.datasets.ImageFolder(val_dir, val_transforms)
+
+
+#-----------------------------------------------------------------------------------------------------
+# Order the categories as per how Dataloader loads it
+#-----------------------------------------------------------------------------------------------------
+
+foldername_to_class = { 'dogs50A-train' : "dog",
+                        'n01440764': "tench",
+                        'n02979186': "cassette player", 
+                        'n03000684': "chain saw",
+                        'n03028079': "church",
+                        'n03394916': "French horn",
+                        'n03417042': "garbage truck",
+                        'n03425413': "gas pump",
+                        'n03445777':  "golf ball",
+                        'n03888257': "parachute" }
+
+# Imagenette classes - labels for better description
+categories_ref = [
+    "English springer",
+    "tench",
+    "cassette player",
+    "chain saw",
+    "church",
+    "French horn",
+    "garbage truck",
+    "gas pump",
+    "golf ball",
+    "parachute",
+]
+
+# sort as value to fit the directory order to labels to be sure
+print("Image to Folder Index",train_dataset.class_to_idx)
+sorted_vals = dict(sorted(train_dataset.class_to_idx.items(), key=lambda item: item[1]))
+categories =[]
+for key in sorted_vals:
+    classname = foldername_to_class[key]
+    categories.append(classname)
+
+log.info("Categories",categories)
+
+
 
 # -------------------------------------------------------------------------------------------------------
 # Initialise the data loaders
 # -------------------------------------------------------------------------------------------------------
 
-workers = 2
-pin_memory = True
-batch_size = 64
+workers = 0
+pin_memory = False
+batch_size = 32
+torch.cuda.empty_cache()
+torch.cuda.reset_max_memory_allocated()
+torch.cuda.synchronize()
+
+
+#ImageFile.LOAD_TRUNCATED_IMAGES = True # Use the data_checker.py and remove bad files instead of using this
 
 train_loader = torch.utils.data.DataLoader(
     train_dataset,
@@ -130,7 +177,6 @@ lossFn = nn.CrossEntropyLoss()
 for images, labels in train_loader:
     log.info(f"Shape of X [N, C, H, W]: {images.shape}")
     log.info(f"Shape of y: {labels.shape} {labels.dtype}")
-    log.info(f"Label: {labels}")
     # test one flow
     # pred = model(x)
     # loss = lossFn(pred, y)
@@ -153,16 +199,28 @@ for epoch in range(0, num_epochs):
     trainAccuracy = 0
     totalTrainAccuracy = 0
     valCorrect = 0
+
     # loop over the training set
     for i, (images, labels) in enumerate(train_loader):
-        # send the input to the device
-        (images, labels) = (images.to(device), labels.to(device))
-        # perform a forward pass and calculate the training loss
-        outputs = model(images)
-        loss = lossFn(outputs, labels)
-        # zero out the gradients, perform the backpropagation step,
-        # and update the weights
-        opt.zero_grad() #IMPORTANT otherwise the gradients of previous batches are not zeroed out
+
+        try:
+            # Train in auto-mode with 16 bit mode
+            #with torch.autocast(device_type='cuda', dtype=torch.float16):
+            #Train in normal mode
+            with torch.autocast(device_type='cuda', dtype=torch.float32):
+                # send the input to the device
+                (images, labels) = (images.to(device), labels.to(device))
+                # perform a forward pass and calculate the training loss
+                outputs = model(images)
+                # output is float16 because linear layers autocast to float16.
+                #assert outputs.dtype is torch.float16 or 64
+
+                loss = lossFn(outputs, labels)
+                # zero out the gradients, perform the backpropagation step,
+                # and update the weights
+                opt.zero_grad() #IMPORTANT otherwise the gradients of previous batches are not zeroed out
+        except Exception as e:
+            log.error(f"Exception in data processing- skip and continue = {e}")
         loss.backward()
         totalTrainLoss += loss
         opt.step()
@@ -192,20 +250,9 @@ model_save_name =path+ modelname + datetime.now().strftime("%H:%M_%B%d%Y")
 torch.save(
     model.state_dict(),model_save_name + ".pth"
 )
+log.info(f"Model {modelname} saved as {model_save_name}")
 
-# Imagenette classes - labels for better description
-categories = [
-    "tench",
-    "English springer",
-    "cassette player",
-    "chain saw",
-    "church",
-    "French horn",
-    "garbage truck",
-    "gas pump",
-    "golf ball",
-    "parachute",
-]
+# Generate the Confusion Matrix
 
 confusion_matrix = np.zeros((len(categories),len(categories)))
 

@@ -9,30 +9,40 @@ Load the Pre-trained models generated from test4_cnn_imagenet_small.py in the sa
 """
 
 from importlib.resources import path
-from operator import mod
-import urllib.request
 from PIL import Image
-from torchvision import transforms
+from torchvision import transforms,datasets
 import torch
 from models import resnet, alexnet, mycnn, mycnn2
-
+import os
 
 test_images = ['test-tench.jpg','test-church.jpg','test-garbagetruck.jpg','test-truck.jpg','test-dog.jpg',
 "test-englishspringer.jpg","test_dogcartoon.jpg","test_chaingsaw.jpg","test_chainsawtrain.jpg","test_frenchhorn.jpg",
 "test_frenchhorntrain.jpg","test-golfball.jpg"]
 
 
-# url, filename = path, "test.jpg"
+data_dir = "./imagenette2-320"
+train_dir = os.path.join(data_dir, "train")
+train_dataset = datasets.ImageFolder(train_dir,[])
 
-# try:
-#     urllib.request.urlopen(url, filename)
-# except:
-#     urllib.request.urlretrieve(url, filename)
+#-----------------------------------------------------------------------------------------------------
+# Order the categories as per how Dataloader loads it
+#-----------------------------------------------------------------------------------------------------
 
-# Imagenette classes
-categories = [
-    "tench",
+foldername_to_class = { 'dogs50A-train' : "dog",
+                        'n01440764': "tench",
+                        'n02979186': "cassette player", 
+                        'n03000684': "chain saw",
+                        'n03028079': "church",
+                        'n03394916': "French horn",
+                        'n03417042': "garbage truck",
+                        'n03425413': "gas pump",
+                        'n03445777':  "golf ball",
+                        'n03888257': "parachute" }
+
+# Imagenette classes - labels for better description
+categories_ref = [
     "English springer",
+    "tench",
     "cassette player",
     "chain saw",
     "church",
@@ -43,10 +53,19 @@ categories = [
     "parachute",
 ]
 
+# sort as value to fit the directory order to labels to be sure
+print("Image to Folder Index",train_dataset.class_to_idx)
+sorted_vals = dict(sorted(train_dataset.class_to_idx.items(), key=lambda item: item[1]))
+categories =[]
+for key in sorted_vals:
+    classname = foldername_to_class[key]
+    categories.append(classname)
+
+print("Categories",categories)
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
-modelname = "mycnn2"
+modelname = "resnet50"
 
 if modelname == "mycnn":
     model = mycnn.MyCNN()
@@ -62,8 +81,8 @@ if modelname == "alexnet":
     resize_to = transforms.Resize((227, 227))
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
-    path = "RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
-    resize_to = transforms.Resize((150, 150))
+    path ="RestNet50_11:45_November072022.pth"
+    resize_to = transforms.Resize((227, 227))
 
 path = "cnn/saved_models/" +path
 model.load_state_dict(torch.load(path))
@@ -96,109 +115,8 @@ for filename in test_images:
     print(f"Detecting for class {filename} model {modelname}")
     print("--------------------------------")
     # Show top categories per image
-    top5_prob, top5_catid = torch.topk(probabilities, 5)
+    top5_prob, top5_catid = torch.topk(probabilities, 2)
     for i in range(top5_prob.size(0)):
         print(categories[top5_catid[i]], top5_prob[i].item())
     print("--------------------------------")
 
-"""
-Output Resnet50 -Works Great
-
-tench 0.9974397420883179
-English springer 0.0012430829228833318
-golf ball 0.0011808514827862382
-chain saw 4.901618740404956e-05
-French horn 3.386243406566791e-05
-
-church 0.9996765851974487
-cassette player 0.00014972625649534166
-tench 7.752762030577287e-05
-French horn 2.9099957828293554e-05
-golf ball 2.4453636797261424e-05
-
-Test on a normal truck - Somehow Resnet is not able to generalize well ??
-
-Tested with resize on 100 * 100 (on which the network was trained)
-
-cassette player 0.9416605830192566 --> not good
-garbage truck 0.05656484141945839
-French horn 0.000811699777841568
-English springer 0.0005154424579814076
-gas pump 0.00035581536940298975
-
-Test on Actual Garbage truck
-
-garbage truck 0.9998109936714172
-cassette player 8.67886483320035e-05
-gas pump 8.608541247667745e-05
-church 1.5945111954351887e-05
-golf ball 1.385972154821502e-07
-
----------------------------
-Output Alexnet - Works okay
-----------------------------
-
-tench 0.7363258600234985
-golf ball 0.1412317305803299
-cassette player 0.044817518442869186
-chain saw 0.02296517603099346
-English springer 0.01489443145692348
-
-church 0.947597086429596
-chain saw 0.012251818552613258
-French horn 0.011542724445462227
-garbage truck 0.009849738329648972
-parachute 0.008836846798658371
-
-Test on a normal truck (not in training)
-
-garbage truck 0.7310217022895813  --> Good
-gas pump 0.09301765263080597
-chain saw 0.05727909877896309
-cassette player 0.05487482622265816
-church 0.02958359383046627
-
-Test on Actual Garbage truck
-
-gas pump 0.3171851336956024  --> Not good
-garbage truck 0.25640568137168884 --> but close
-chain saw 0.13151127099990845
-church 0.10047641396522522
-cassette player 0.08960364013910294
-
----------------------------
-Output MyCNN - Not Bad!
-----------------------------
-
-tench 0.9997798800468445
-cassette player 7.071228174027056e-05
-church 6.913103425176814e-05
-golf ball 4.983545659342781e-05
-English springer 1.9843486370518804e-05
-
-cassette player 0.7094578742980957 --> Not good
-church 0.23043203353881836 --> this is correct
-gas pump 0.059944577515125275
-parachute 0.00016101213986985385
-tench 3.3010521747200983e-06
-
-Test on a normal truck (not in training)
-
-garbage truck 0.9966506361961365
-gas pump 0.0030325346160680056
-parachute 0.00017644459148868918
-golf ball 0.00013912079157307744
-chain saw 8.742731552047189e-07
-
-Test on Actual Garbage truck
-
-garbage truck 0.9999910593032837
-tench 5.209851224208251e-06
-French horn 1.5582596688545891e-06
-cassette player 1.4181257483869558e-06
-chain saw 5.445947408588836e-07
-
-Results are kind of surprising; The test images are randomly from internet;  Yet even the rudimentry CNN model (myCNN) is able to recognize the garbage truck.
-and the best of breed ResNet seems not to be able to generalize on these test images; thought the accuracy of the model on imagenetter test images was very good
-
-"""

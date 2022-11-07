@@ -35,29 +35,15 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-# Imagenette classes
-categories = [
-    "tench",
-    "English springer",
-    "cassette player",
-    "chain saw",
-    "church",
-    "French horn",
-    "garbage truck",
-    "gas pump",
-    "golf ball",
-    "parachute",
-]
-
 
 # Choose a saved Model - assign the name you want to test with
 # (assuming that you have trained the models)
 modelname = "resnet50"
-
+    
 if modelname == "mycnn":
     model = mycnn.MyCNN()
-    path = "mycnn_18:07_October142022.pth" 
-    resize_to = transforms.Resize((227, 227))
+    path =  "mycnn_11:49_October302022.pth" 
+    resize_to = transforms.Resize((150, 150))
 if modelname == "mycnn2":
     model = mycnn2.MyCNN2()
     path ="mycnn2_16:43_October182022.pth"
@@ -69,9 +55,10 @@ if modelname == "alexnet":
 if modelname == "resnet50":
     model = resnet.ResNet50(img_channel=3, num_classes=10)
     path = "./RestNet50_11:43_October072022.pth"   # trained with more dog images from imagenet
-    resize_to = transforms.Resize((150, 150))
+    path ="./RestNet50_11:45_November072022.pth"
+    resize_to = transforms.Resize((227, 227))
 
-
+path = "cnn/saved_models/" +path
 model.load_state_dict(torch.load(path))
 model.eval()
 
@@ -80,6 +67,8 @@ model.eval()
 # -------------------------------------------------------------------------------------------------------
 
 data_dir = "./imagenette2-320"
+
+
 train_dir = os.path.join(data_dir, "train")
 normalize_transform = transforms.Normalize(
     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -104,6 +93,44 @@ train_dataset = torchvision.datasets.ImageFolder(train_dir, train_transforms)
 
 val_dataset = torchvision.datasets.ImageFolder(val_dir, val_transforms)
 
+#-----------------------------------------------------------------------------------------------------
+# Order the categories as per how Dataloader loads it
+#-----------------------------------------------------------------------------------------------------
+
+foldername_to_class = { 'dogs50A-train' : "dog",
+                        'n01440764': "tench",
+                        'n02979186': "cassette player", 
+                        'n03000684': "chain saw",
+                        'n03028079': "church",
+                        'n03394916': "French horn",
+                        'n03417042': "garbage truck",
+                        'n03425413': "gas pump",
+                        'n03445777':  "golf ball",
+                        'n03888257': "parachute" }
+
+# Imagenette classes - labels for better description
+categories_ref = [
+    "English springer",
+    "tench",
+    "cassette player",
+    "chain saw",
+    "church",
+    "French horn",
+    "garbage truck",
+    "gas pump",
+    "golf ball",
+    "parachute",
+]
+
+# sort as value to fit the directory order to labels to be sure
+print("Image to Folder Index",train_dataset.class_to_idx)
+sorted_vals = dict(sorted(train_dataset.class_to_idx.items(), key=lambda item: item[1]))
+categories =[]
+for key in sorted_vals:
+    classname = foldername_to_class[key]
+    categories.append(classname)
+
+print("Categories",categories)
 # -------------------------------------------------------------------------------------------------------
 # Initialise the data loaders
 # -------------------------------------------------------------------------------------------------------
@@ -134,6 +161,7 @@ test_loader = torch.utils.data.DataLoader(
 #  Test the model - Find accuracy and per class
 # -------------------------------------------------------------------------------------------------------
 
+print("Image to Folder Index",train_dataset.class_to_idx)
 
 # move the input and model to GPU for speed if available
 if torch.cuda.is_available():
