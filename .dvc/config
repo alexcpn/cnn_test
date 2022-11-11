@@ -1,4 +1,5 @@
 [core]
     remote = storage
 ['remote "storage"']
-    url = s3://imagenette/s3.us-west-004.backblazeb2.com
+    url = s3://imagenette/dvc
+    endpointurl = https://s3.us-west-004.backblazeb2.com
