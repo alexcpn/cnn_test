@@ -19,8 +19,8 @@ import torchvision.transforms as transforms
 from matplotlib import ticker
 
 from models import alexnet, mycnn, mycnn2, resnet
+from torch.utils.tensorboard import SummaryWriter
 
-# from PIL import ImageFile
 
 
 log.basicConfig(format="%(asctime)s %(message)s", level=log.INFO)
@@ -35,6 +35,12 @@ torch.cuda.empty_cache()
 num_classes = 10
 learning_rate = 0.001
 num_epochs = 20  # actual 20 epochs
+workers = 0
+pin_memory = False
+batch_size = 64
+torch.cuda.empty_cache()
+torch.cuda.reset_max_memory_allocated()
+torch.cuda.synchronize()
 
 # Device will determine whether to run the training on GPU or CPU.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -47,12 +53,12 @@ if device.type == "cuda":
 # Select the model you want to train
 # -------------------------------------------------------------------------------------------------------
 
-modelname = "RestNet50_"
+modelname = "alexnet_"
 
 if modelname == "mycnn_":
     # Actual image size is 432*320
     model = mycnn.MyCNN().to(device)
-    resize_to = transforms.Resize((150, 150))
+    resize_to = transforms.Resize((227, 227))
 if modelname == "mycnn2_":
     # Actual image size is 432*320
     model = mycnn2.MyCNN2().to(device)
@@ -146,12 +152,6 @@ log.info("Categories", categories)
 # Initialise the data loaders
 # -------------------------------------------------------------------------------------------------------
 
-workers = 0
-pin_memory = False
-batch_size = 32
-torch.cuda.empty_cache()
-torch.cuda.reset_max_memory_allocated()
-torch.cuda.synchronize()
 
 
 # ImageFile.LOAD_TRUNCATED_IMAGES = True # Use the data_checker.py and remove bad files instead of using this
@@ -194,6 +194,10 @@ log.info(f"Total steps: {total_step}")
 stepsize = total_step // 100
 if stepsize < 10:
     stepsize = 10
+
+# Write training matrics to Tensorboard
+writer = SummaryWriter()
+
 # loop over our epochs
 for epoch in range(0, num_epochs):
     # set the model in training mode
@@ -225,6 +229,7 @@ for epoch in range(0, num_epochs):
                 loss = lossFn(outputs, labels)
                 # zero out the gradients, perform the backpropagation step,
                 # and update the weights
+                writer.add_scalar("Loss/train", loss,  (epoch * total_step)+(i+1))
                 opt.zero_grad()  # IMPORTANT otherwise the gradients of previous batches are not zeroed out
         except Exception as e:
             log.error(f"Exception in data processing- skip and continue = {e}")
@@ -235,6 +240,7 @@ for epoch in range(0, num_epochs):
         _, predicted = torch.max(outputs.data, 1)
         trainAccuracy = (predicted == labels).float().sum().item()
         trainAccuracy = 100 * trainAccuracy / labels.size(0)
+        writer.add_scalar("Accuracy/train", trainAccuracy,(epoch * total_step)+(i+1))
         totalTrainAccuracy += trainAccuracy
         # if (i // stepsize) % 10 == 0:
         log.info(
@@ -250,6 +256,8 @@ for epoch in range(0, num_epochs):
             epoch + 1, num_epochs, avgTrainLoss, avgAccuracy
         )
     )
+    # End Epoch loop
+writer.flush()
 
 # Save the model
 path = "cnn/saved_models/"
